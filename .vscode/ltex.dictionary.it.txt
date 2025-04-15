@@ -1,0 +1,6 @@
+mantenibilità
+controller
+Cache
+cache
+interrupt
+polling

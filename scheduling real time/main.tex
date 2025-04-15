@@ -1,0 +1,160 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+
+% Page layout
+\geometry{a4paper, margin=1in}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Real-Time Systems}
+\fancyhead[R]{\thepage}
+\hypersetup{
+    colorlinks,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=cyan,
+}
+% Title
+\title{Appunti sistemi embedded \\ Scheduling Real-Time Systems}
+\author{}
+\date{2025}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+\section{Introduzione}
+
+I sistemi real time sono sistemi di computazione dove la reazione a eventi dell'ambiente deve avvenire entro precisi requisiti temporali.
+Dunque la correttezza della computazione non dipende unicamente dal risultato prodotto, ma anche dal tempo in cui il risultato è prodotto.
+Una reazione ritardata potrebbe essere inutile o addirittura dannosa.
+Molto spesso questi sistemi vengono implementati attraverso la programmazione in assembly o con driver a basso livello per la gestione delle periferiche, manipolazione delle task 
+e la priorità degli interrupt.
+\\
+Questo approccio presenta degli svantaggi
+\begin{itemize}
+    \item Programmazione tediosa
+    \item Codice poco comprensibile
+    \item Difficile manutenibilità
+    \item Difficile verifica dei vincoli temporali
+\end{itemize}
+La conseguenza maggior di questo approccio è che il software costruito tramite tecniche empiriche può  essere impredicibile.\\
+Se tutti i vincoli temporali critici non possono essere verificati a priori e il sistema operativo non include meccanismi specifici per maneggiare i task real-time
+il sistema potrebbe apparentemente funzionare correttamente per un certo periodo di tempo, ma potrebbe fallire in situazioni particolari.
+Il testing, pur essendo importante, non può essere una soluzione per ottenere la predicibilità in un sistema real-time. Questo vale perché 
+il flusso di controllo dipende anche da eventi esterni dell'ambiente, che non possono essere interamente inclusi nel testing.
+\section{Real time}
+La correttezza del sistema non dipende solamente dal risultato logico prodotto dalla computazione ma anche dal tempo in cui il risultato è prodotto.
+Il termine reale indica che la reazione del sistema a eventi esterni deve avvenire \textbf{durante} la loro evoluzione.
+Di conseguenza il tempo interno al sistema deve essere misurato usando la stessa scala utilizzata per misurare il tempo dell'ambiente controllato.
+Al livello di processo la principale differenza tra un task real-time e non è la presenza di una \textbf{deadline}, ovvero il tempo massimo in cui una task deve essere completata.
+In un sistema critico una task che non rispetta la deadline non solo è in ritardo, è anche un errore!
+In base alle conseguenze a cui porta il non rispettare la deadline le task possono essere suddivise in:
+\begin{itemize}
+\item \textbf{Hard} se il non rispetto della deadline porta a conseguenze catastrofiche, ad esempio il fallimento di un sistema di controllo di un aereo.
+\item \textbf{Firm} se il non rispetto della deadline porta a un output inutile al sistema ma non produce conseguenze catastrofiche.
+\item \textbf{Soft} se il non rispetto della deadline porta a una degradazione della qualità del servizio ma non produce conseguenze catastrofiche.
+\end{itemize}
+Un sistema in grado di gestire task hard real-time è detto \textbf{hard real-time system}.
+Alcuni di questi sistemi sono tendenzialmente sistemi \textbf{safety critical}.
+\subsection{Limiti dei sistemi real-time correnti}
+Molti dei sistemi attualmente in uso sono soluzioni basate su kernel, che sono versioni modificate di sistemi operativi a time sharing.
+Una conseguenza di questo è che condividono le stesse feature di base dei sistemi a time sharing, che non sono adatte a sistemi real-time.
+Le caratteristiche principali sono:
+\begin{itemize}
+\item \textbf{Multitasking}\\
+    Supporto per la programmazione concorrente offerta attraverso un insieme di chiamate a sistema per la gestione dei processi. Molte di queste primitive
+    non prendono in considerazione il tempo e, peggio ancora, introducono ritardi senza limiti ai tempi di esecuzione, il che potrebbe portare le task hard a non rispettare le deadline in maniera non predicibile.
+\item \textbf{Scheduling basato su priorità}\\
+    Meccanismo flessibile di scheduling, dato che permette di implementare diverse strategie in base alla maniera in cui assegno le priori
+    Nonostante ciò, mappare i constraint a un insieme di priorità è difficile e non sempre possibile, specialmente in un sistema dinamico.
+    Il problema principale è che i kernel permettono un \textbf{numero limitato di livelli di priorità}, mentre le deadline possono variare molto di più.
+    In sistemi dinamici l'arrvo di una nuova task può comportare un remappaggio dell'intero insieme di priorità.
+\item \textbf{Capacità di rispondere velocemente agli interrupt}\\
+    Solitamente questa feature viene ottenuta tramite la possibilità di impostare una priorità per gli interrupt, più alta rispetto alla priorità dei processi e 
+    riducendo al minimo le porzioni di codice eseguite con le interruzioni disabilitate.
+    \\
+    Nota che questo approccio aumenta la reattività del sistema agli eventi esterni, ma introduce dei ritardi non limitati all'esecuzione dei processi.
+    Infatti, un processo di un'applicazione sarà sempre interrotto da un interrupt di un driver, anche se è più importante che venga servita la periferica.
+\item \textbf{Meccanismo di base per la comunicazione tra processi e sincronizzazione}\\
+    Tipicamente semafori binari per la sincronizzazione e la mutua esclusione su risorse condivise.
+    Però, se nessun protocollo d'accesso è utilizzato per entrare in sezioni critiche i semafori possono generare una serie di problemi, ad esempio la \textbf{priority inversion} o deadlokc.
+\item \textbf{Small kernel e context switch veloce}\\
+    Questa feature riduce l'overhead del sistema, dunque migliora il response time medio dell'insieme di task. 
+    Ciò nonostante non è sufficiente per garantire il rispetto delle deadline. D'altro canto un kernel piccolo implica limitate funzionalità, il che ha effetto sulla predicibilità del sistema.
+\item \textbf{Supporto a clock real-time come reference di tempo interna}\\
+    Feature essenziale di ogni kernel real-time che gestisce task hard real-time che interagiscono con l'ambiente esterno.
+    Nella maggior parte dei kernel commerciali questo è l'unico meccanismo di temporizzazione disponibile.
+    In molti casi non vi sono primitive per controllare esplicitamente i constraint temporali delle task, e non c'è un supporto per l'attivazione automatica delle task periodiche.
+\end{itemize}
+La mancanza di una qualsiasi garanzia preclude l'utilizzo di questi sistemi in casi in cui i requisiti temporali siano stringenti.
+\subsection{Feature desiderabili di un sistema real-time}
+La predicibilità può essere ottenuta apportando pesanti modifiche ai tipici sistemi a time sharing.
+Alcune proprietà importanti sono:
+\begin{itemize}
+\item \textbf{Timeliness}\\
+    I risultati non devono essere corretti solo nel loro valore ma anche nel dominio temporale.
+    Di conseguenza il sistema operativa deve fornire degli specifici meccanismi del kernel per la gestione del tempo e 
+    per la gestione dei task con constraint temporali espliciti e criticità diverse.
+\item \textbf{Predicibilità}\\\
+    Per raggiungere il livello di performance desiderato, il sistema deve essere analizzabile per prevedere le conseguenze di ogni decisione di scheduling.
+    Nelle applicazioni safety critical tutti i requisiti temporali devono esser garantiti a priori, prima di mettere il sistema in azione.
+    Se qualche vincolo non può essere garantito, il sistema deve essere in grado di informare l'utente e delle decisioni alternative devono essere prese.
+\item \textbf{Efficienza}\\
+    La maggior parte dei sistemi real-time sono embedded, dunque l'efficienza è un requisito fondamentale.
+\item \textbf{Robustezza}\\
+    Il sistema deve essere in grado di continuare a funzionare a qualsiasi condizioni di carico. La gestione dell'overload e il comportamento di adattamento sono feature essenziali per sistemi con molta varianza di carico.
+\item \textbf{Tolleranza agli errori}\\
+    Singoli errori hardware o software non devono portare a un fallimento del sistema.
+\item \textbf{Manutenibilità}\\
+    L'architettura di un sistema real-time deve essere progettata in maniera modulare per permettere di eseguire modifiche facilmente.
+\end{itemize}
+\subsection{Ottenere la predicibilità}
+Un sistema dovrebbe essere in grado di prevedere l'evoluzione delle task e garantire in anticipo che tutti i vincoli temporali critici 
+vengano rispettati.
+L'affidabilità della garanzia dipende da un insieme di fattori, che includono anche le caratteristiche fisiche dell'hardware e 
+i meccanismi/politiche del kernel.
+\\
+La prima componente che influisce sulla predicibilità è il processore. Le caratteristiche del processore, ad esempio il prefetch delle istruzioni, 
+pipelining, cache, DMA sono fonti di \textbf{non determinismo}.
+\\
+Pur aumentando le performance medie del sistema, introducono fattori di non determinismo che prevengono una precisa stima dei worst-case-execution-time (WCETs).
+Altre caratteristiche che influenzano la predicibilità sono le caratteristiche interne del kernel, come l'algoritmo di scheduling, i meccanismi di sincronizzazione, 
+i tipi di semafori, le politiche di gestione della memoria e le politiche di gestione degli interrupt.
+\subsection{DMA}
+Uno dei modi più comuni per implementarlo è tramite cycle stealing, il DMA controller prende il controllo del bus per un ciclo di clock 
+e poi lo rilascia al processore.
+Durante l'operazione di DMA il trasferimento e l'esecuzione del codice sul processore avvengo in parallelo.
+SE la CPU e il DMA controller richiedono un ciclo di memoria allo stesso tempo, il bus viene assegnato al DMA controller e la CPU
+aspetta finché il DMA non ha finito.
+In questo modo non è possibile prevedere il tempo di esecuzione di un task, dato che il tempo di esecuzione dipende da quante volte il DMA controller ha bisogno del bus.
+\\
+Una possibile soluzione al problema è il time-slicing, dove un ciclo di memoria è diviso in due slot di tempo adiacenti, uno per il DMA e uno per la CPU.
+Questa soluzione è più costosa ma più prevedibile di cycle stealing, dato che il response time di una task non è influenzato dal DMA.
+\subsection{Cache}
+Nei sistemi real-time la cache è una fonte di non determinismo, dato che il tempo di accesso alla memoria dipende dalla presenza o meno del dato in cache.
+Quando avviene un cache miss il tempo di accesso alla memoria è molto più lungo, e questo non è prevedibile.
+Quando si effettua una scrittura in memoria l'utilizzo della cache risulta costoso perché il tempo di accesso alla memoria è più lungo, dato che deve essere garantita la consistenza.
+\subsection{Interrupts}
+Un grosso problema per la predicibilità è la gestione degli interrupt provenienti dalle periferiche I/O.
+Se non gestite correttamente possono introdurre ritardi non limitati durante l'esecuzione di processi.\\
+In quasi tutti i sistemi operativi la gestione di un interrupt prevede l'esecuzione di una service routine dedicata per la gestione del device.
+Il vantaggio di questo metodo è che tutti i dettagli hardware sono contenuti nel driver.\\
+In molti OS gli interrupt vengono serviti usando un sistema a priorità fissa, tramite i quali ogni driver viene schedulato in base a una priorità statica, questa priorità è più alta rispetto a quella di qualsiasi processo.
+In generale è molto difficile prevedere a priori il numero di interrupt che un task può ricevere, dunque il delay è impredicibile.
+\\
+Per ridurre l'interferenza dei driver sui task ed effettuare operazioni di I/O le periferiche devono essere gestiste differentemente
+\subsubsection{Approccio A}
+La soluzione più radicale è disattivare tutti gli interrupt esterni, a eccezione di quelli generati dal timer.
+Tutte le periferiche vanno gestiste dall'applicazione (controllo di programma), i quali hanno accesso ai registri delle periferiche.
+Dato che non ci sono più interrupt, il trasferimento deve essere effettuato tramite polling.
+
+\end{document}
