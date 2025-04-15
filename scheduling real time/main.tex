@@ -6,7 +6,7 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{fancyhdr}
-
+\usepackage{hyperref}
 % Page layout
 \geometry{a4paper, margin=1in}
 
@@ -190,5 +190,24 @@ può essere impostata in base ai requisiti del programma.\\
 Il vantaggio principale di questo metodo è che il busy wait viene eliminato e il tempo di esecuzione del driver di gestione del device è 
 molto ridotto, di conseguenza il tempo di esecuzione del task è più prevedibile.
 Nella maggior parte delle applicazioni pratiche il piccolo overhead portato da questo tipo di driver viene ignorato.
+
+\subsection{Semafori}
+L'usuale meccanismo dei semafori utilizzato nei sistemi operativi tradizionali non è adatto per i sistemi real-time per via del fenomeno dell'\href{https://en.wikipedia.org/wiki/Priority_inversion}{inversione di priorità}.
+L'inversione di priorità deve essere evitato a tutti i costi in un sistema real-time, dato che introduce non determinismo sull'esecuzione di task critiche.
+Per quanto riguarda il problema della mutua esclusione l'inversione di priorità può essere evitata usando protocolli specifici che devono essere usati ogni 
+volta che si effettua un accesso alla sezione critica.
+L'implementazione di questo tipo di protocollo potrebbe richiedere estensive modifiche al kernel, che non comprendono solo le primitive $wait$ e $signal$, ma anche strutture dati e meccanismi di task management.
+\subsection{Gestione della memoria}
+Come gli altri aspetti del kernel, la gestione della memoria deve essere progettata per evitare il non determinismo.
+Ad esempio sistemi di paging on-demand non sono adatti a sistemi con rigidi vincoli temporali a causa dei lunghi e imprevedibili ritardi causati dalle page fault e page replacement.
+LE soluzioni tipiche adottate nei sistemi real-time prevedono regole di segmentazione della memoria con uno schema fisso. Il partizionamento statico è particolarmente efficace quando i programmi richiedono
+una quantità di memoria simile tra loro.
+In generale gli schemi di allocazione statici aumentato la predicibilità del sistema, ma diminuiscono la flessibilità in sistemi dinamici, dunque la scelta progettuale va fatta bilanciando le due caratteristiche.
+\subsection{Linguaggi di programmazione}
+Con l'aumentare della complessità dei sistemi real-time aumenta anche la necessità di utilizzare astrazioni offerte dai linguaggi.
+\\
+Purtroppo i linguaggi attualmente a disposizioni non sono abbastanza espressivi da permettere di esprimere certi comportamenti temporali, dunque non sono adatti per la programmazione di sistemi real-time.
+L'esistenza di costrutti che modificano il flusso di controllo del programma in maniera non deterministica, come gli $if$, rende impossibile la stima affidabile dei WCETs in attività concorrenti.
+Un'altra fonte di inpredicibilità è data dalla ricorsione, l'analizzatore di scheduling non è in grado di prevedere il numero di chiamate ricorsive e il tempo di esecuzione.
 
 \end{document}

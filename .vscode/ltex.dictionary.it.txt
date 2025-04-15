@@ -9,3 +9,5 @@ overhead
 kernel
 busy
 wait
+fault
+paging

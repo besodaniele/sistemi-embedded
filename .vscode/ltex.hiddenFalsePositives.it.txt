@@ -1,0 +1,1 @@
+{"rule":"ARTICOLATA_SOSTANTIVO","sentence":"^\\QAd esempio sistemi di paging on-demand non sono adatti a sistemi con rigidi vincoli temporali a causa dei lunghi e imprevedibili ritardi causati dalle page fault.\\E$"}
