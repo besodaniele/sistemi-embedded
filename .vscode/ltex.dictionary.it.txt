@@ -4,3 +4,8 @@ Cache
 cache
 interrupt
 polling
+device
+overhead
+kernel
+busy
+wait

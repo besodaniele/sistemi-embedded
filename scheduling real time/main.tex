@@ -137,7 +137,7 @@ SE la CPU e il DMA controller richiedono un ciclo di memoria allo stesso tempo, 
 aspetta finché il DMA non ha finito.
 In questo modo non è possibile prevedere il tempo di esecuzione di un task, dato che il tempo di esecuzione dipende da quante volte il DMA controller ha bisogno del bus.
 \\
-Una possibile soluzione al problema è il time-slicing, dove un ciclo di memoria è diviso in due slot di tempo adiacenti, uno per il DMA e uno per la CPU.
+Una possibile soluzione al problema è il time slicing, dove un ciclo di memoria è diviso in due slot di tempo adiacenti, uno per il DMA e uno per la CPU.
 Questa soluzione è più costosa ma più prevedibile di cycle stealing, dato che il response time di una task non è influenzato dal DMA.
 \subsection{Cache}
 Nei sistemi real-time la cache è una fonte di non determinismo, dato che il tempo di accesso alla memoria dipende dalla presenza o meno del dato in cache.
@@ -156,5 +156,39 @@ Per ridurre l'interferenza dei driver sui task ed effettuare operazioni di I/O l
 La soluzione più radicale è disattivare tutti gli interrupt esterni, a eccezione di quelli generati dal timer.
 Tutte le periferiche vanno gestiste dall'applicazione (controllo di programma), i quali hanno accesso ai registri delle periferiche.
 Dato che non ci sono più interrupt, il trasferimento deve essere effettuato tramite polling.
+L'accesso diretto alle periferiche consente alta flessibilità al livello di programma ed elimina i delay introdotti dai driver.
+Dunque il tempo necessario per un trasferimento può essere calcolato a priori.
+Un altro vantaggio è che il kernel non va modificato quando una nuova periferica viene aggiunta o ne viene rimossa una.
+\\
+Lo svantaggio principale è che risulta poco efficiente dato la busy wait necessaria per il polling.
+Un grosso problema è che le applicazioni richiedono la conoscenza completa dei dettagli a basso livello delle periferiche che devono gestire.
+Questo può essere gestito incapsulando le routine che dipendono dai device in una libreria.
+\subsubsection{Approccio B}
+Come nella soluzione precedente tutti gli interrupt esterni sono disabilitati, tranne quelli dei timer.
+In questa soluzione le periferiche non vengono gestite direttamente dall'applicazione, ma a turno da routine dedicate del kernel, 
+periodicamente attivate dal timer.
+Questo approccio elimina i ritardi causati dai driver e confina le operazioni di I/O a una o più routine periodiche del kernel.
+In alcuni sistemi i device I/O vengono suddivisi in due gruppi in base alla loro velocità, quelli più veloci vengono gestiti da task 
+periodici con frequenza maggiore.
+\\
+Il vantaggio di questo metodo è che tutti i dettagli hardware sono incapsulati nel kernel, dunque l'applicazione non ha bisogno di 
+conoscere i dettagli a basso livello delle periferiche.
+Dato che gli interrupt sono disabilitati il maggior problema è dato dalla busy wait delle procedure di gestione dell'I/O del kernel.
+Questo metodo introduce un overhead maggiore rispetto all'approccio A, richiede modifiche al kernel quando una periferica viene aggiunta o rimossa.
+\subsubsection{Approccio C}
+Lasciare gli interrupt abilitati e ridurre al minimo possibile i driver per le periferiche.
+L'unico scopo dei driver è quello di attivare una task che gestisce il device. Una volta attivato il task di gestione del device 
+viene eseguito sotto diretto controllo del sistema operativo
+ed è schedulato come un task normale.
+In questo modo la priorità che può essere assegnata al task di gestione del device è completamente indipendente dalle altre priorità 
+può essere impostata in base ai requisiti del programma.\\
+\begin{figure*}[h]
+\centering
+\includegraphics[height=150px]{pictures/approccioC.png}
+\caption{Attivazione task per la gestione del device}
+\end{figure*}
+Il vantaggio principale di questo metodo è che il busy wait viene eliminato e il tempo di esecuzione del driver di gestione del device è 
+molto ridotto, di conseguenza il tempo di esecuzione del task è più prevedibile.
+Nella maggior parte delle applicazioni pratiche il piccolo overhead portato da questo tipo di driver viene ignorato.
 
 \end{document}
