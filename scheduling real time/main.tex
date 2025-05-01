@@ -7,6 +7,7 @@
 \usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{hyperref}
+\usepackage{float}
 % Page layout
 \geometry{a4paper, margin=1in}
 
@@ -15,6 +16,8 @@
 \fancyhf{}
 \fancyhead[L]{Real-Time Systems}
 \fancyhead[R]{\thepage}
+\setlength{\headheight}{14.49998pt} % Adjust head height
+\addtolength{\topmargin}{-2.49998pt} % Compensate for the increased head height
 \hypersetup{
     colorlinks,
     linkcolor=black,
@@ -22,7 +25,7 @@
     urlcolor=cyan,
 }
 % Title
-\title{Appunti sistemi embedded \\ Scheduling Real-Time Systems}
+\title{Appunti sistemi embedded \\ Scheduling in Real-Time Systems}
 \author{}
 \date{2025}
 
@@ -117,7 +120,7 @@ Alcune proprietà importanti sono:
 \item \textbf{Manutenibilità}\\
     L'architettura di un sistema real-time deve essere progettata in maniera modulare per permettere di eseguire modifiche facilmente.
 \end{itemize}
-\subsection{Ottenere la predicibilità}
+\section{Fonti di impredicibilità}
 Un sistema dovrebbe essere in grado di prevedere l'evoluzione delle task e garantire in anticipo che tutti i vincoli temporali critici 
 vengano rispettati.
 L'affidabilità della garanzia dipende da un insieme di fattori, che includono anche le caratteristiche fisiche dell'hardware e 
@@ -164,8 +167,9 @@ Lo svantaggio principale è che risulta poco efficiente dato la busy wait necess
 Un grosso problema è che le applicazioni richiedono la conoscenza completa dei dettagli a basso livello delle periferiche che devono gestire.
 Questo può essere gestito incapsulando le routine che dipendono dai device in una libreria.
 \subsubsection{Approccio B}
-Come nella soluzione precedente tutti gli interrupt esterni sono disabilitati, tranne quelli dei timer.
-In questa soluzione le periferiche non vengono gestite direttamente dall'applicazione, ma a turno da routine dedicate del kernel, 
+Come nella soluzione precedente tutti gli interrupt esterni sono disabilitati,
+tranne quelli dei timer.\\
+In questa soluzione le periferiche non vengono gestite direttamente dall'applicazione, ma a turno da routine dedicate del kernel 
 periodicamente attivate dal timer.
 Questo approccio elimina i ritardi causati dai driver e confina le operazioni di I/O a una o più routine periodiche del kernel.
 In alcuni sistemi i device I/O vengono suddivisi in due gruppi in base alla loro velocità, quelli più veloci vengono gestiti da task 
@@ -181,12 +185,13 @@ L'unico scopo dei driver è quello di attivare una task che gestisce il device. 
 viene eseguito sotto diretto controllo del sistema operativo
 ed è schedulato come un task normale.
 In questo modo la priorità che può essere assegnata al task di gestione del device è completamente indipendente dalle altre priorità 
-può essere impostata in base ai requisiti del programma.\\
+può essere impostata in base ai requisiti del programma.
 \begin{figure*}[h]
 \centering
 \includegraphics[height=150px]{pictures/approccioC.png}
 \caption{Attivazione task per la gestione del device}
 \end{figure*}
+\\
 Il vantaggio principale di questo metodo è che il busy wait viene eliminato e il tempo di esecuzione del driver di gestione del device è 
 molto ridotto, di conseguenza il tempo di esecuzione del task è più prevedibile.
 Nella maggior parte delle applicazioni pratiche il piccolo overhead portato da questo tipo di driver viene ignorato.
@@ -208,6 +213,131 @@ Con l'aumentare della complessità dei sistemi real-time aumenta anche la necess
 \\
 Purtroppo i linguaggi attualmente a disposizioni non sono abbastanza espressivi da permettere di esprimere certi comportamenti temporali, dunque non sono adatti per la programmazione di sistemi real-time.
 L'esistenza di costrutti che modificano il flusso di controllo del programma in maniera non deterministica, come gli $if$, rende impossibile la stima affidabile dei WCETs in attività concorrenti.
-Un'altra fonte di inpredicibilità è data dalla ricorsione, l'analizzatore di scheduling non è in grado di prevedere il numero di chiamate ricorsive e il tempo di esecuzione.
+Un'altra fonte di impredicibilità è data dalla ricorsione, l'analizzatore di scheduling non è in grado di prevedere il numero di chiamate ricorsive e il tempo di esecuzione.
 
+\section{Concetti di base di scheduling}
+\subsection{Introduzione}
+Un \textbf{processo} è una computazione eseguita dalla CPU in maniera sequenziale, d'ora in poi useremo il termine processo come sinonimo di \textit{task} o \textit{thread}.
+\\
+In realtà un processo è una entità più complessa composta da vari task (o thread)
+che condividono lo stesso spazio di indirizzamento e le stesse risorse.
+Una \textbf{politica di scheduling} è un criterio secondo il quale la CPU viene assegnata ai vari task che si sovrappongono.
+L'insieme di politiche che in ogni istante di tempo determinano l'ordine con il quale i task vengono eseguiti è detto \textbf{algoritmo di scheduling}.\\
+L'operazione specifica di assegnare la CPU a un task selezionato dall'algoritmo di scheduling è detta \textbf{dispatching}.
+Quando un processo può essere potenzialmente eseguito dalla CPU, possiamo avere due casi: 
+\begin{itemize}
+    \item Il processo è in \textbf{running} perché è già stato selezionato dall'algoritmo di scheduling e la CPU è stata assegnata a lui.
+    \item Il processo è in \textbf{ready} e aspetta di essere selezionato dall'algoritmo di scheduling.
+\end{itemize}
+In entrambi i casi il processo viene detto un task \textbf{attivo}. Tutti i processi in wait vengono tenuti in una \textbf{ready queue}. I vari sistemi operativi possono utilizzare anche più code dipendentemente dal tipo di task.
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{pictures/cicloEsecuzione.png}
+\caption{Coda di task in ready che aspettano di essere eseguiti}
+\end{figure}
+In molti sistemi dove è concessa l'attivazione dinamica dei task, questi possono essere interrotti in qualsiasi momento, così che quando un task più importante entra nel sistema esso possa essere eseguito immediatamente senza aspettare nella ready queue.
+L'operazione di interrompere il task in esecuzione e reinserirlo nella ready queue è detta \textbf{preemption}.\\
+Nei sistemi real-time la preemption è importante per 3 motivi:
+\begin{itemize}
+    \item I task che gestiscono le eccezioni potrebbero aver bisogno di fare preemption di task in esecuzione per garantire che le eccezioni siano gestite in tempo.
+    \item Quando i task hanno livelli di priorità diversi, i task critici possono essere eseguiti immediatamente.
+    \item Tipicamente lo scheduling con preemption permette maggiore efficienza, nel senso che permette l'esecuzione di task real time con una percentuale di utilizzo di CPU maggiore.
+\end{itemize}
+D'altro canto la preemption distrugge la località dei programmi e introduce overhead, di conseguenza limitare la preemption in un sistema real-time può essere benefico.
+\\
+Uno schedule è detto \textbf{feasible} se tutti i task possono essere eseguiti rispettando l'insieme di vincoli a essi posti.
+Un insieme di task è detto \textbf{schedulabile} se esiste uno schedule che rispetta i vincoli di tutti i task.
+\subsection{Tipi di vincoli di scheduling}
+Tipicamente i vincoli applicabili a task real time rientrano in tre classi:
+\begin{itemize}
+    \item Vincoli temporali
+    \item Vincoli di precedenza
+    \item Vincoli di mutua esclusione su risorse condivise
+\end{itemize}
+\subsubsection{Vincoli temporali}
+I sistemi realtime sono caratterizzati da attività computazionali con stringenti vincoli temporali che devono essere rispettati per ottenere il comportamento desiderato.
+Un requisito tipico è che un task deve essere completato entro un certo tempo, detto \textbf{deadline}.\\
+Se la deadline è rappresentata in rispetto a quando il task è stato attivato, essa è detta \textbf{relative deadline}, altrimenti è detta \textbf{absolute deadline}.\\
+In base alle conseguenze a cui porta il non rispetto della deadline le task possono essere suddivise in:
+\begin{itemize}
+    \item \textbf{Hard} se il non rispetto della deadline porta a conseguenze catastrofiche, ad esempio il fallimento di un sistema di controllo di un aereo.
+    \item \textbf{Firm} se il non rispetto della deadline porta a un output inutile al sistema ma non produce conseguenze catastrofiche.
+    \item \textbf{Soft} se il non rispetto della deadline porta a una degradazione della qualità del servizio ma non produce conseguenze catastrofiche.
+\end{itemize}
+\begin{figure}[h]
+    \includegraphics[width=\textwidth]{pictures/parametriTask.png}
+    \caption{Parametri di un task}
+\end{figure}
+In generale un task realtime $\tau_i$ è caratterizzato da:
+\begin{itemize}
+    \item \textbf{Tempo di arrivo} $a_i$, il momento in cui il task è pronto per essere eseguito, anche detto \textbf{release time} o \textbf{request time} e indicato da $r_i$.
+    \item \textbf{Tempo di computazione} $c_i$, il tempo necessario per completare il task\\ \underbar{\textbf{senza interruzioni}}, l'upperbound è il WCET.
+    \item \textbf{Deadline assoluta} $d_i$, il tempo entro il quale il task deve essere completato.
+    \item \textbf{Deadline relativa} $D_i$, il tempo entro il quale il task deve essere completato rispetto al suo tempo di arrivo, $D_i=d_i-r_i$.
+    \item \textbf{Tempo di inizio} $s_i$, il tempo in cui il task inizia a essere eseguito.
+    \item \textbf{Tempo di completamento} $f_i$, il tempo in cui il task termina la sua esecuzione.
+    \item \textbf{Tempo di risposta} $T_i$, il tempo di ritardo del task, ovvero $T_i=f_i-r_i$.
+    \item \textbf{Criticità}, già discusso: hard, firm o soft.
+    \item \textbf{Lateness} $L_i$, il tempo di ritardo del task rispetto alla deadline, ovvero $L_i=f_i-d_i$, in generale vogliamo che sia negativa, ovvero i task devono essere eseguiti entro le deadline.
+    \item \textbf{Tempo di slack} $X_i=d_i-a_i-c_i$, il tempo massimo per cui l'attivazione di un task può essere ritardata senza violare la deadline.
+\end{itemize}
+Un'altra caratteristica temporale che riguarda la regolarità dell'attivazione di un task.
+Un task è detto \textbf{periodico} se consiste di una infinita sequenza di attività identiche, chiamate \textbf{job}, che si attivano a intervalli regolari.
+Per chiarezza di notazione notiamo i task periodici con $\tau_i$ e quelli aperiodici con $J_i$. Il generico k-esimo job di un task periodico $\tau_i$ è denotato con $\tau_{i,k}$.
+Il tempo di attivazione della prima istanza di un task periodico ($\tau_{i,1}$) è detto \textbf{fase}, denotato con $\phi_i$.
+Il periodo di attivazione di un task periodico è denotato con $T_i$, che è il tempo tra due attivazioni consecutive.
+I task \textbf{aperiodici} sono caratterizzati da un tempo di attivazione non regolare, un task \textbf{sporadico} è un task aperiodico che ha un tempo di attivazione massimo, ovvero il tempo minimo tra due attivazioni consecutive.\\
+\subsubsection{Vincoli di precedenza}
+In alcune applicazioni le attività non possono essere eseguite in ordine arbitrario, ma devono rispettare un ordine di precedenza stabilito durante la progettazione.
+Tali precedenze tendenzialmente vengono rappresentate tramite un grafo diretto aciclico (DAG), dove i nodi rappresentano le attività e gli archi rappresentano le precedenze.
+Un DAG definisce un relazione di ordine parziale tra le attività, che può essere usata per determinare un ordine di esecuzione.
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{pictures/precedenzaTask.png}
+    \caption{Relazione di precedenza tra 5 task}
+\end{figure}
+\noindent La notazione $J_a \prec J_b$ indica che il task $J_a$ è un predecessore di $J_b$, ovvero il grafo contiene un cammino orientato da $J_a$ a $J_b$.
+\\
+La notazione $J_a \rightarrow J_b$ indica che $J_a$ è un predecessore diretto di $J_b$, ovvero il grafo contiene un arco diretto da $J_a$ a $J_b$.
+\\
+I task senza predecessori vengono detti \textbf{task iniziali}, mentre quelli senza successori vengono detti \textbf{task finali}.
+\subsubsection{Vincoli di mutua esclusione}
+Dal punto di vista di un processo, una risorsa è una struttura software che può essere utilizzata dal processo per avanzare la sua esecuzione.
+Una risorsa è detta \textit{privata} se è dedicata a un processo, altrimenti se può essere utilizzata da più processi è detta \textbf{condivisa}.
+Per mantenere la correttezza del dato, molte risorse condivise non permettono l'accesso simultaneo da parte di task concorrenti, dunque richiedono la \textbf{mutua esclusione}.
+La parte di codice che accede alla risorsa condivisa in mutua esclusione è detta \textbf{sezione critica}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.60\textwidth]{pictures/strutturaSezioneCritica.png}
+    \caption{Struttura di due task che accedono a una risorsa condivisa in mutua esclusione, tramite meccanismo di semafori}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{pictures/schedulingCorsaCritica.png}
+    \caption{Esempio di scheduling quando la risorsa è protetta da un semaforo}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{pictures/cicloWait.png}
+    \caption{Stato di wait causato da un vincolo sulle risorse}
+\end{figure}
+\noindent Quando un task è in attesa di una risorsa condivisa, si dice che \textit{bloccato} su quella risorsa.
+Tutti i task bloccati su una stessa risorsa vengono messi in una \textbf{wait queue} associata a un semaforo che protegge la risorsa.
+Quando un task in esecuzione utilizza la primitiva \textit{wait} su un semaforo bloccato, entra nello stato di \textbf{wait}, fino a quando un altro task non esegue la primitiva \textit{signal} che sblocca il semaforo.
+Nota che quando un task lascia lo stato di wait non entra immediatamente nello stato di running, ma entra nello stato di ready, cosicché la CPU possa essere assegnata a un task con priorità più alta dall'algoritmo di scheduling.
+
+\subsection{Classificazione di algoritmi di scheduling}
+Le classi principali di algoritmi di scheduling sono:
+\begin{itemize}
+    \item \textbf{Preemptive vs. non preemptive}
+    \begin{itemize}
+        \item Preemptive: un task può essere interrotto in qualsiasi momento da un task con priorità più alta, secondo una policy di scheduling definita in precedenza.
+        \item Non preemptive: un task una volta avviato deve essere eseguito fino al termine della sua esecuzione. Tutte le scelta di scheduling vengono effettuate quando il task termina la sua esecuzione.
+    \end{itemize}
+    \item \textbf{Static vs. Dynamic}
+    \begin{itemize}
+        \item Static: le decisioni di scheduling avvengono in base a un insieme di parametri che vengono definiti prima dell'attivazione dei task.
+        \item Dynamic: le decisioni di scheduling avvengono in base a un insieme di parametri che possono essere modificati durante l'evoluzione del sistema.
+    \end{itemize}
+    
+\end{itemize}
 \end{document}

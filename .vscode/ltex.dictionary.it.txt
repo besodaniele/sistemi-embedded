@@ -11,3 +11,11 @@ busy
 wait
 fault
 paging
+scheduling
+real-time
+preemption
+queue
+ready
+running
+thread
+dispatching
