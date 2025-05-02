@@ -1,1 +1,2 @@
 {"rule":"ARTICOLATA_SOSTANTIVO","sentence":"^\\QAd esempio sistemi di paging on-demand non sono adatti a sistemi con rigidi vincoli temporali a causa dei lunghi e imprevedibili ritardi causati dalle page fault.\\E$"}
+{"rule":"MORFOLOGIK_RULE_IT_IT","sentence":"^\\QDynamic: le decisioni di scheduling avvengono in base a un insieme di parametri che possono essere modificati durante l'evoluzione del sistema.\\E$"}

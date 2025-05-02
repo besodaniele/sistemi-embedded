@@ -338,6 +338,42 @@ Le classi principali di algoritmi di scheduling sono:
         \item Static: le decisioni di scheduling avvengono in base a un insieme di parametri che vengono definiti prima dell'attivazione dei task.
         \item Dynamic: le decisioni di scheduling avvengono in base a un insieme di parametri che possono essere modificati durante l'evoluzione del sistema.
     \end{itemize}
-    
+    \item \textbf{Off-line vs. online} 
+    \begin{itemize}
+        \item Off-line: Le decisioni di scheduling vengono interamente prese per l'intero insieme di task prima dell'attivazione di essi.
+        Questo scheduling è memorizzato in una tabella e successivamente viene eseguito dal dispatcher.
+        \item Online: Le decisioni di scheduling vengono prese a runtime ogni volta che un nuovo task entra nel sistema, o quando un task running termina. Notare che questo genera un overhead.
+    \end{itemize}
+    \item \textbf{Ottimale vs. euristico}
+    \begin{itemize}
+        \item Ottimale: Un algoritmo è detto ottimale se minimizza la "funzione costo" definita per l'insieme di task.
+        Quando non è definita questa funzione costo il nostro unico obiettivo è ottenere uno schedule feasible (se esiste).
+        \item Euristico: Un algoritmo è detto euristico se è guidato da una funzione euristica per prendere decisioni di scheduling.
+        Un algoritmo euristico tende verso lo scheduling ottimale, ma non è garantito che lo raggiunga.
+    \end{itemize}
 \end{itemize}
+Inoltre un algoritmo è detto \textit{chiaroveggente} se conosce il futuro, ovvero conosce in anticipo il tempo di arrivo di tutti i task. Questo algoritmo chiaramente non esiste, ma è utilizzato come benchmark per valutare gli altri algoritmi in confronto al caso perfetto.
+\subsubsection{Algoritmi di scheduling basati sulla garanzia}
+Nelle applicazioni hard real-time sono richiesti comportamenti altamente predicibili, la feasibility di uno scheduling dovrebbe essere garantita in anticipo (prima dell'attivazione dei task).
+In questa maniera, e un task critico non può essere schedulato prima della sua deadline, il sistema è in tempo per eseguire un'azione alternativa che tenta di evitare conseguenze catastrofiche.
+Per controllare la feasibility di uno scheduling prima dell'esecuzione dei task il sistema deve pianificare le sue azioni assumendo il caso peggiore.
+Quindi vanno analizzati i parametri del task set per verificare che esista uno scheduling ammissibile.
+Nei sistemi statici, ovvero il task set è fisso e noto a priori, tutte le attivazioni dei task possono essere pre calcolate off-line, e tutto lo schedule può essere memorizzato in una tabella che contiene tutti i task garantiti.
+Poi a runtime il dispatcher può semplicemente eseguire lo schedule memorizzato. Il vantaggio principale dell'approccio statico è che l'overhead a runtime non dipende dalla complessità dell'algoritmo di scheduling.
+Questo permette di utilizzare algoritmi di scheduling sofisticati per risolvere problemi complessi. D'altro canto, il sistema è rigido rispetto a cambiamenti nell'ambiente.\\
+Nei sistemi dinamici (che tipicamente consistono di task \textit{firm}) i task possono essere creati a runtime, dunque la garanzia di scheduling deve essere effettuata online ogni volta che un nuovo task viene creato.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/garanziaDinamica.png}
+    \caption{Meccanismo di garanzia in un sistema dinamico real time}
+\end{figure}
+\noindent Inoltre deve essere garantito che quando un task viene accettato, esso non deve interdire la feasibility di task garantiti in precedenza.
+\subsubsection{Algoritmi di scheduling best effort}
+Nelle applicazioni real-time soft, i task non hanno vincoli temporali stringenti, ma devono essere eseguiti in un tempo ragionevole per soddisfare i requisiti si sistema.
+Dunque il mancato rispetto delle deadline non porta a conseguenze catastrofiche, ma porta a una degradazione delle performance.
+Un algoritmo best effort cerca di fare "del suo meglio" per rispettare le deadline, ma non garantisce di trovare uno scheduling feasible.
+Negli approcci best effort i task potrebbero essere messi in coda in base a delle politiche che considerano i requisiti temporali, ma non viene controllata la feasibility e quindi un task potrebbe venir abortito durante la sua esecuzione.\\
+Mediamente le performance di un algoritmo best effort sono migliori rispetto a quelle di un algoritmo basato sulla garanzia, infatti un algoritmo basato sulla garanzia
+potrebbe, basandosi sul caso peggiore, rifiutare inutilmente un task che in realtà sarebbe riuscito a rispettare la deadline.
+
 \end{document}
