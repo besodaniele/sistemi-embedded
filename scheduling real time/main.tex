@@ -24,8 +24,9 @@
     filecolor=black,      
     urlcolor=cyan,
 }
+\newtheorem{theorem}{Theorem}
 % Title
-\title{Appunti sistemi embedded \\ Scheduling in Real-Time Systems}
+\title{Appunti sistemi embedded \\ Scheduling in sistemi real-time}
 \author{}
 \date{2025}
 
@@ -320,7 +321,7 @@ La parte di codice che accede alla risorsa condivisa in mutua esclusione è dett
     \includegraphics[width=0.75\textwidth]{pictures/cicloWait.png}
     \caption{Stato di wait causato da un vincolo sulle risorse}
 \end{figure}
-\noindent Quando un task è in attesa di una risorsa condivisa, si dice che \textit{bloccato} su quella risorsa.
+\noindent Quando un task è in attesa di una risorsa condivisa, si dice che è \textit{bloccato} su quella risorsa.
 Tutti i task bloccati su una stessa risorsa vengono messi in una \textbf{wait queue} associata a un semaforo che protegge la risorsa.
 Quando un task in esecuzione utilizza la primitiva \textit{wait} su un semaforo bloccato, entra nello stato di \textbf{wait}, fino a quando un altro task non esegue la primitiva \textit{signal} che sblocca il semaforo.
 Nota che quando un task lascia lo stato di wait non entra immediatamente nello stato di running, ma entra nello stato di ready, cosicché la CPU possa essere assegnata a un task con priorità più alta dall'algoritmo di scheduling.
@@ -375,5 +376,97 @@ Un algoritmo best effort cerca di fare "del suo meglio" per rispettare le deadli
 Negli approcci best effort i task potrebbero essere messi in coda in base a delle politiche che considerano i requisiti temporali, ma non viene controllata la feasibility e quindi un task potrebbe venir abortito durante la sua esecuzione.\\
 Mediamente le performance di un algoritmo best effort sono migliori rispetto a quelle di un algoritmo basato sulla garanzia, infatti un algoritmo basato sulla garanzia
 potrebbe, basandosi sul caso peggiore, rifiutare inutilmente un task che in realtà sarebbe riuscito a rispettare la deadline.
+
+\section{Scheduling di task aperiodici}
+Gli algoritmi affrontati in questa sezione riguardano task aperiodici real-time, eseguiti su una macchina single core.
+Ogni algoritmo è una soluzione a un problema di scheduling espresso come insieme di assunzioni sulle task e criteri di ottimalità da utilizzare.
+Pur essendo pensati per task aperiodici su macchine monoprocesso, molti di questi algoritmi possono essere estesi per lavorare su sistemi multiprocessore o architetture distribuite per lavorare con task set più complessi.
+\\
+Per descrivere un problema di scheduling utilizziamo i parametri $\alpha|\beta|\gamma$:
+\begin{itemize}
+\item $\alpha$ è il tipo di macchina (uniprocessore, multiprocessore, distribuito, ecc.)
+\item $\beta$ descrive le task e le caratteristiche delle risorse (preemptive, indipendente vs vincoli di precedenza, attivazione asincrona, etc.)
+\item $\gamma$ è il criterio di ottimalità
+\end{itemize}
+\subsection{Garanzie}
+Per garantire che esista uno scheduling feasible dobbiamo mostrare che, nel caso peggiore, tutti i task vengano completati prima delle rispettive deadline.
+Vale a dire che per ogni task dobbiamo mostrare che il tempo di completamento nel caso peggiore $f_i$ è minore o uguale alla rispettiva deadline $d_i$.
+\begin{equation}
+    f_i \leq d_i , \forall i \in \{1,2,\ldots,n\}
+\end{equation}
+Se un task ha requisiti hard, quest'analisi di fattiblità deve essere effettuata prima dell'esecuzione dei task.
+Senza perdita di generalità possiamo assumere che i task $J_1,J_2,\dots J_n$ siano elencati in ordine di deadline crescente, ovvero $J_1$ ha la deadline più vicina.
+In questo caso il tempo di completamento del task $J_i$ nel caso peggiore è dato da:
+\begin{equation}
+    f_i=\sum_{k=1}^{i} C_k
+\end{equation}
+Dunque in un task set con $n$ task il test di garanzia consiste nel verificare che:
+\begin{equation}
+    \forall i \in \{1,2,\dots ,n\} \sum_{k=1}^i C_j \leqq d_i
+\end{equation}
+\subsection{Earliest Deadline First (EDF)}
+Se le task non sono sincrone ma possono avere tempo di arrivo arbitrario, la preemption diventa un fattore importante.
+In generale un problema di scheduling dove la preemption è permessa è sempre più facile da risolvere rispetto allo stesso problema senza preemption.
+Una soluzione elegante a problemi del tipo $1|preem|L_{max}$ è data dall'algoritmo \textbf{Earliest Deadline First} (EDF).
+\begin{theorem}
+    Dato un insieme di $n$ task con tempo di arrivo arbitrario, ogni algoritmo che ad ogni istante esegue il task con la deadline assoluta più vicina tra tutti i task attivi è ottimale rispetto alla minimizzazione della lateness.
+\end{theorem}
+La complessità computazionale dell'algoritmo è $O(n)$ per ogni task se la ready queue è implementata come lista, e $O(n\log n)$ se la ready queue è implementata come heap.
+\subsubsection{Garanzia}
+Quando i task hanno attivazioni dinamiche e il tempo di arrivo non è noto a priori, il test di garanzia deve essere fatto dinamicamente ogni volta che un task entra nel sistema.
+Sia $\mathcal{T}$ l'insieme corrente di task attivi, che sono stati garantiti in precedenza, sia $J_{new}$ il nuovo task che entra nel sistema.
+Per poter accettare $J_{new}$ dobbiamo garantire che il nuovo task set $\mathcal{T} \cup J_{new}$ sia schedulabile.
+\subsection{EDF con vincoli di precedenza}
+Consideriamo problemi di scheduling del tipo $1|prec,preem|L_{max}$, dove i task sono soggetti a vincoli di precedenza.
+Il problema di schedulare un insieme di n task con vincoli di precedenza con attivazioni dinamiche può essere risolto in tempo polinomiale \underbar{SOLO} se i task sono preentable.
+L'idea alla base dell'approccio è quella di trasformare  il set di task dipendenti $\mathcal{T}$ in un insieme di task indipendenti $\mathcal{T}^*$ tramite adeguate modifiche ai parametri temporali, dopodiché possiamo applicare l'algoritmo EDF.
+L'algoritmo di trasformazione garantisce che $\mathcal{T}$ sia schedulabile se e solo se $\mathcal{T}*$ è schedulabile. In pratica tutti i release time e le deadline sono modificati in modo che ogni task non possa cominciare prima del predecessore e non possa fare preemption su i suoi successori.
+\section{Scheduling di task periodici}
+In molti sistemi real-time di controllo, le attività periodiche compongono la maggior parte della computazione del sistema.
+Quando una applicazione di controllo consiste in molteplici task periodici concorrenti, con vincoli temporali indipendenti, il sistema operativo deve garantire che ogni istanza periodica 
+venga regolarmente attivata con la giusta frequenza e che venga eseguita entro la deadline (che in generale è diversa dal suo periodo).\\
+Per semplificare l'analisi di scheduling vengono assunte le seguenti ipotesi:
+\begin{itemize}
+    \item Le istanze di task periodici $\tau_i$ sono regolarmente attivate a frequenza costante, ovvero ogni $T_i$ (periodo del task).
+    \item Tutte le istanze di un task periodico $\tau_i$ hanno lo stesso WCET $C_i$.
+    \item Tutte le istanze di un task periodico $\tau_i$ hanno la stessa deadline relativa $D_i$, che è uguale a $T_i$.
+    \item Tutte le task di $\mathcal{T}$ sono indipendenti.
+\end{itemize}
+Inoltre alcune assunzioni implicite sono:
+\begin{itemize}
+    \item Nessun task si può bloccare da solo, ad esempio per operazioni di I/O.
+    \item Tutti i task vengono rilasciati appena arrivano nel sistema.
+    \item L'overhead del kernel viene considerato nullo.
+\end{itemize}
+Per quest'ultima assunzione potrei evitare problemi se considero solo una percentuale di "potenza di cpu" disponibile, così da lasciare dello spazio per l'overhead del kernel.\\
+Nota che le prime due assunzioni non sono restrittive, dato che in molte applicazioni di controllo ogni attività periodica richiede l'esecuzione della stessa routine a intervalli regolari.
+Quando si analizzano casi realistici, le assunzioni 3 e 4 vengono rilassate.
+\\
+Altri parametri importanti per i task periodici sono:
+\begin{itemize}
+    \item \textbf{Hyperperiod}: minimo intervallo di tempo nel quale lo scheduling si ripete.
+    \item \textbf{Critical instant} di un task: tempo di arrivo che produce il response time del task più lungo.
+\end{itemize}
+\subsection{Fattore di utilizzo del processore}
+Dato un insieme di task periodici $\Gamma$, il \textit{fattore di utilizzo} del processore $U$ è la frazione del tempo di CPU che viene utilizzato per eseguire l'insieme di task.
+Dato che $\frac{C_i}{T_i}$ è la frazione di tempo di CPU utilizzata da un task $\tau_i$, il fattore di utilizzo del processore è dato da:
+\begin{equation}
+    U = \sum_{i=1}^{n} \frac{C_i}{T_i}
+\end{equation}
+Questo valore ci fornisce una misura del carico computazionale sulla CPU. Nonostante possa essere migliorato aumentando il tempo di computazione dei task o diminuendo il loro periodo, esiste un valore massimo 
+di $U$ per il quale $\Gamma$ è schedulabile. Tale limite dipende dalla relazione dei periodi dei task e dall'algoritmo di scheduling utilizzato.
+Sia $U_{ub}(\Gamma,A)$ il limite superiore al fattore di utilizzo del processore per un insieme di task $\Gamma$ schedulato con l'algoritmo $A$.
+Quando $U = U_{ub}(\Gamma,A)$, si dice che $\Gamma$ \textit{utilizza completamente} il processore. In questo caso $\Gamma$ è schedulabile da $A$, ma un qualsiasi aumento nel tempo di computazione rende il task set non feasible.
+Per un algoritmo di scheduling $A$, il limite superiore minore $U_{lub}(\Gamma,A)$ è il minimo fattore di utilizzo su tutti i task set che utilizzano completamente il processore.
+\begin{equation}
+    U_{lub}(\Gamma,A) = \min_{\Gamma } U_{ub}(\Gamma,A)
+\end{equation}
+Dato che $U_{lub}(\Gamma,A)$ è il minimo di tutti gli upper bound, qualsiasi task set con fattore di utilizzo minore di $U_{lub}(\Gamma,A)$ è sicuramente schedulabile da $A$. In questa maniera 
+è facilmente determinabile se un task set è schedulabile o meno con un determinato algoritmo. 
+\begin{itemize}
+    \item Se $ U_{lub}< U < 1.0$, la schedulabilità viene raggiunta solo se i periodi sono compatibili.
+    \item Se $U_{lub} > 1.0 $, il task set \underline{non è schedulabile da nessun algoritmo}.
+\end{itemize}
+\subsection{Timeline scheduling}
 
 \end{document}

@@ -22,3 +22,5 @@ dispatching
 feasible
 dispatcher
 runtime
+ottimalità
+ottimalità
