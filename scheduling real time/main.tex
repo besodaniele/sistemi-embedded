@@ -8,6 +8,7 @@
 \usepackage{fancyhdr}
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{subfig} % Added for subfloat functionality
 % Page layout
 \geometry{a4paper, margin=1in}
 
@@ -461,12 +462,78 @@ Per un algoritmo di scheduling $A$, il limite superiore minore $U_{lub}(\Gamma,A
 \begin{equation}
     U_{lub}(\Gamma,A) = \min_{\Gamma } U_{ub}(\Gamma,A)
 \end{equation}
-Dato che $U_{lub}(\Gamma,A)$ è il minimo di tutti gli upper bound, qualsiasi task set con fattore di utilizzo minore di $U_{lub}(\Gamma,A)$ è sicuramente schedulabile da $A$. In questa maniera 
+Dato che $U_{lub}(\Gamma,A)$ è il minimo di tutti gli upper bound, qualsiasi task set con fattore di utilizzo minore di $U_{lub}(\Gamma,A)$ è \underline{sicuramente} schedulabile da $A$. In questa maniera 
 è facilmente determinabile se un task set è schedulabile o meno con un determinato algoritmo. 
 \begin{itemize}
     \item Se $ U_{lub}< U < 1.0$, la schedulabilità viene raggiunta solo se i periodi sono compatibili.
     \item Se $U_{lub} > 1.0 $, il task set \underline{non è schedulabile da nessun algoritmo}.
 \end{itemize}
 \subsection{Timeline scheduling}
+Anche noto come \textit{Cyclic Executive}, è uno degli approcci più adottati per gestire task periodici nei sistemi di difesa militari e di controllo di traffico.
+Il metodo consiste nel dividere l'asse temporale in slot di egual lunghezza, nei quali uno o più task vengono allocati per l'esecuzione; in modo da rispettare le frequenze date dai requisiti.
+Un timer sincronizza l'attivazione dei task all'inizio di ogni slot.\\
+Consideriamo un esempio dove tre task $A,B$ e $C$ devono essere eseguiti con frequenze rispettivamente di $40Hz$, $20Hz$ e $10Hz$.
+Dunque i rispettivi periodi sono $T_A=25ms$, $T_B=50ms$ e $T_C=100ms$ (N.B. $F=\frac{1}{T}$), si ricava che la lunghezza ottimale dello slot è di 
+$25ms$, che è il massimo comune divisore dei periodi. Quindi il task $A$ viene eseguito ogni slot, il task $B$ ogni 2 slot e il task $C$ ogni 4 slot.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/timelineScheduling.png}
+    \caption{Esempio di timeline scheduling}
+\end{figure}
+\noindent La durata dello slot è detta \textit{Minor cycle}, mentre l'intervallo minio di tempo dopo il quale uno schedule si ripete è detto \textit{Major cycle}.
+\\
+In generale, il major cycle è uguale al minimo comune multiplo di tutti i periodi. Per poter garantire a priori che lo schedule sia feasible su un processore,
+è sufficiente sapere il WCET dei task e verificare che la somma all'interno di ogni slot sia minore o uguale al minor cycle.
+\\
+Il \textbf{vantaggio} principale di timeline scheduling è la sua \textbf{semplicità}. Può essere implementato tra programmando un timer che interrompa con periodo uguale al minor cycle
+e scrivendo un ciclo main dove i task vengono chiamati nell'ordine dato dal major cycle, inserendo punti di sincronizzazione a ogni inizio del minor cycle.
+Dato che la sequenza di attivazione dei task non è determinata da un algoritmo di scheduling nel kernel, ma è determinata dalle chiamate effettuate dal main, non vi sono context switch, dunque l'overhead a runtime è molto basso.
+Nonostante questi vantaggi, vi sono dei problemi, ad esempio l'alta fragilità in situazioni di overload. Se un task non termina nel limite del minor cycle, può essere continuato o abortito.
+In entrambi i casi, il sistema entra in uno stato critico.
+Se il task fallimentare rimane in esecuzione esso può causare un effetto a domino sugli altri task, rompendo l'intero schedule (timeline break).
+Se un task viene abortito mentre compie azioni su risorse condivise, esso può lasciare le risorse in uno stato inconsistente e causare un comportamento non corretto.
+Inoltre è particolarmente sensibile a cambiamenti nei requisiti.
+\subsection{Rate Monotonic Scheduling (RMS)}
+Funziona tramite una semplice regola che assegna la priorità a un task in base alla sua frequenza di attivazione.
+In particolare, task con periodi più brevi hanno priorità più alta.
+Dato che i periodi sono costanti, RM è un sistema fixed priority, ovvero la priorità $P_i$ di un task $i$ non cambia durante l'esecuzione.
+RM è intrinsecamente preemptive, ovvero un task con priorità più alta può interrompere un task con priorità più bassa.
+È stato dimostrato che RM è ottimale rispetto a tutti gli assegnamenti di priorità fissi, nel senso che nessun altro sistema di scheduling a priorità fissa può schedulare un task set che non può essere schedulato da RM.
+\\
+È utile conoscere $U_{lub}$ per RM su un task set di $n$ task, che è dato da:
+\begin{equation}
+    U_{lub} = n(2^{\frac{1}{n}}-1)
+\end{equation}
+\begin{table}[H]
+    \centering
+    \subfloat[]{ 
+        \begin{tabular}{|l|l|}
+        \hline
+        n & $U_{lub}$ \\ \hline
+        1 & 1.000 \\ \hline
+        2 & 0.828 \\ \hline
+        3 & 0.780 \\ \hline
+        4 & 0.757 \\ \hline
+        5 & 0.743 \\ \hline
+        \end{tabular}
+    }
+    \qquad
+    \subfloat[]{ 
+
+        \begin{tabular}{|l|l|}
+        \hline
+        n  & $U_{lub}$      \\ \hline
+        6  & 0.73  \\ \hline
+        7  & 0.729 \\ \hline
+        8  & 0.724 \\ \hline
+        9  & 0.721 \\ \hline
+        10 & 0.718 \\ \hline
+        \end{tabular}
+    } 
+    \caption{Valori di $U_{lub}$ per RM al variare di n} 
+\end{table}
 
 \end{document}
+
+
+
