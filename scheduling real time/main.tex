@@ -187,7 +187,7 @@ L'unico scopo dei driver è quello di attivare una task che gestisce il device. 
 viene eseguito sotto diretto controllo del sistema operativo
 ed è schedulato come un task normale.
 In questo modo la priorità che può essere assegnata al task di gestione del device è completamente indipendente dalle altre priorità 
-può essere impostata in base ai requisiti del programma.
+e può essere impostata in base ai requisiti del programma.
 \begin{figure*}[h]
 \centering
 \includegraphics[height=150px]{pictures/approccioC.png}
@@ -357,7 +357,7 @@ Le classi principali di algoritmi di scheduling sono:
 Inoltre un algoritmo è detto \textit{chiaroveggente} se conosce il futuro, ovvero conosce in anticipo il tempo di arrivo di tutti i task. Questo algoritmo chiaramente non esiste, ma è utilizzato come benchmark per valutare gli altri algoritmi in confronto al caso perfetto.
 \subsubsection{Algoritmi di scheduling basati sulla garanzia}
 Nelle applicazioni hard real-time sono richiesti comportamenti altamente predicibili, la feasibility di uno scheduling dovrebbe essere garantita in anticipo (prima dell'attivazione dei task).
-In questa maniera, e un task critico non può essere schedulato prima della sua deadline, il sistema è in tempo per eseguire un'azione alternativa che tenta di evitare conseguenze catastrofiche.
+In questa maniera, così che se un task critico non può essere schedulato prima della sua deadline, il sistema è in tempo per eseguire un'azione alternativa che tenta di evitare conseguenze catastrofiche.
 Per controllare la feasibility di uno scheduling prima dell'esecuzione dei task il sistema deve pianificare le sue azioni assumendo il caso peggiore.
 Quindi vanno analizzati i parametri del task set per verificare che esista uno scheduling ammissibile.
 Nei sistemi statici, ovvero il task set è fisso e noto a priori, tutte le attivazioni dei task possono essere pre calcolate off-line, e tutto lo schedule può essere memorizzato in una tabella che contiene tutti i task garantiti.
@@ -410,29 +410,41 @@ Se le task non sono sincrone ma possono avere tempo di arrivo arbitrario, la pre
 In generale un problema di scheduling dove la preemption è permessa è sempre più facile da risolvere rispetto allo stesso problema senza preemption.
 Una soluzione elegante a problemi del tipo $1|preem|L_{max}$ è data dall'algoritmo \textbf{Earliest Deadline First} (EDF).
 \begin{theorem}
-    Dato un insieme di $n$ task con tempo di arrivo arbitrario, ogni algoritmo che ad ogni istante esegue il task con la deadline assoluta più vicina tra tutti i task attivi è ottimale rispetto alla minimizzazione della lateness.
+    Dato un insieme di $n$ task con tempo di arrivo arbitrario, ogni algoritmo che a ogni istante esegue il task con la deadline assoluta più vicina tra tutti i task attivi è ottimale rispetto alla minimizzazione della lateness.
 \end{theorem}
-La complessità computazionale dell'algoritmo è $O(n)$ per ogni task se la ready queue è implementata come lista, e $O(n\log n)$ se la ready queue è implementata come heap.
+La complessità computazionale dell'algoritmo è $O(n)$ per ogni task se la ready queue è implementata come lista, e $O(\log n)$ se la ready queue è implementata come heap.
+Da notare che EDF non fa assunzioni esplicite sulla periodicità dei task, dunque può essere usato sia per task set aperiodici che per task set periodici.
+
 \subsubsection{Garanzia}
 Quando i task hanno attivazioni dinamiche e il tempo di arrivo non è noto a priori, il test di garanzia deve essere fatto dinamicamente ogni volta che un task entra nel sistema.
 Sia $\mathcal{T}$ l'insieme corrente di task attivi, che sono stati garantiti in precedenza, sia $J_{new}$ il nuovo task che entra nel sistema.
-Per poter accettare $J_{new}$ dobbiamo garantire che il nuovo task set $\mathcal{T} \cup J_{new}$ sia schedulabile.
+Per poter accettare $J_{new}$ dobbiamo garantire che il nuovo task set $\mathcal{T} \cup J_{new}$ sia schedulabile.\\
+Sotto le assunzioni di \ref{assunzioni} possiamo verificare la schedulabilità di un task set periodico con EDF attraverso il fattore di utilizzo del processore.
+In questo caso $U_{lub}=1$, quindi un task potrebbe usare il 100\% della CPU ed essere schedulabile.
+\begin{theorem}
+    Un task set di task periodici è schedulabile da EDF se e solo se:
+    \begin{equation}
+        \sum_{i=1}^{n}\frac{C_i}{T_i}\leq 1
+    \end{equation}
+\end{theorem}
 \subsection{EDF con vincoli di precedenza}
 Consideriamo problemi di scheduling del tipo $1|prec,preem|L_{max}$, dove i task sono soggetti a vincoli di precedenza.
 Il problema di schedulare un insieme di n task con vincoli di precedenza con attivazioni dinamiche può essere risolto in tempo polinomiale \underbar{SOLO} se i task sono preentable.
 L'idea alla base dell'approccio è quella di trasformare  il set di task dipendenti $\mathcal{T}$ in un insieme di task indipendenti $\mathcal{T}^*$ tramite adeguate modifiche ai parametri temporali, dopodiché possiamo applicare l'algoritmo EDF.
 L'algoritmo di trasformazione garantisce che $\mathcal{T}$ sia schedulabile se e solo se $\mathcal{T}*$ è schedulabile. In pratica tutti i release time e le deadline sono modificati in modo che ogni task non possa cominciare prima del predecessore e non possa fare preemption su i suoi successori.
+
 \section{Scheduling di task periodici}
 In molti sistemi real-time di controllo, le attività periodiche compongono la maggior parte della computazione del sistema.
 Quando una applicazione di controllo consiste in molteplici task periodici concorrenti, con vincoli temporali indipendenti, il sistema operativo deve garantire che ogni istanza periodica 
 venga regolarmente attivata con la giusta frequenza e che venga eseguita entro la deadline (che in generale è diversa dal suo periodo).\\
 Per semplificare l'analisi di scheduling vengono assunte le seguenti ipotesi:
-\begin{itemize}
+\begin{enumerate}
+    \label{assunzioni}
     \item Le istanze di task periodici $\tau_i$ sono regolarmente attivate a frequenza costante, ovvero ogni $T_i$ (periodo del task).
     \item Tutte le istanze di un task periodico $\tau_i$ hanno lo stesso WCET $C_i$.
     \item Tutte le istanze di un task periodico $\tau_i$ hanno la stessa deadline relativa $D_i$, che è uguale a $T_i$.
     \item Tutte le task di $\mathcal{T}$ sono indipendenti.
-\end{itemize}
+\end{enumerate}
 Inoltre alcune assunzioni implicite sono:
 \begin{itemize}
     \item Nessun task si può bloccare da solo, ad esempio per operazioni di I/O.
@@ -498,9 +510,9 @@ Funziona tramite una semplice regola che assegna la priorità a un task in base 
 In particolare, task con periodi più brevi hanno priorità più alta.
 Dato che i periodi sono costanti, RM è un sistema fixed priority, ovvero la priorità $P_i$ di un task $i$ non cambia durante l'esecuzione.
 RM è intrinsecamente preemptive, ovvero un task con priorità più alta può interrompere un task con priorità più bassa.
-È stato dimostrato che RM è ottimale rispetto a tutti gli assegnamenti di priorità fissi, nel senso che nessun altro sistema di scheduling a priorità fissa può schedulare un task set che non può essere schedulato da RM.
+È stato dimostrato da Liu e Layland che RM è ottimale rispetto a tutti gli assegnamenti di priorità fissi, nel senso che nessun altro sistema di scheduling a priorità fissa può schedulare un task set che non può essere schedulato da RM.
 \\
-È utile conoscere $U_{lub}$ per RM su un task set di $n$ task, che è dato da:
+Liu e Layland hanno inoltre derivato che $U_{lub}$ per RM su un task set di $n$ task è dato da:
 \begin{equation}
     U_{lub} = n(2^{\frac{1}{n}}-1)
 \end{equation}
@@ -532,6 +544,132 @@ RM è intrinsecamente preemptive, ovvero un task con priorità più alta può in
     } 
     \caption{Valori di $U_{lub}$ per RM al variare di n} 
 \end{table}
+\noindent
+Il bound diminuisce all'aumentare di $n$. Per valori alti $U_{lub}$ converge a $U_{lub} = \ln 2 \approx 0.69$. 
+\subsubsection{Bound iperbolico per RM}
+L'analisi di fattibilità su RM può anche essere effettuata utilizzando un bound iperbolico.
+Il test ha la stessa complessità computazionale di quello di Liu e Layland, ma è meno pessimistico, dato che accetta task se4t che verrebbero rifiutati dal test LL.
+Il seguente teorema offre una condizione sufficiente per testare la schedulabilità di un task set con RM.
+\begin{theorem}
+    
+    Sia $\Gamma=\{\tau_1,\tau_2,\dots,\tau_n\}$ un insieme di task periodici dove ogni task $\tau_i$ è caratterizzato dal fattore di utilizzo $U_i$. Allora $\Gamma$ è schedulabile da RM se:
+    \begin{equation}
+        \label{eq:boundIperbolico}
+        \prod_{i=1}^{n}(U_i+1) \leq 2
+    \end{equation}
+\end{theorem}
+Rappresentiamo in un piano $n$ dimensionale il bound LL che interseca gli assi in $U_{lub}=n(2^{\frac{1}{n}}-1)$.
+Tutti i punti al di sotto la superficie di RM rappresentano task set periodici schedulabili da RM.
+Il nuovo bound viene rappresentato da una superficie iperbolica tangente al piano RM e che interseca gli assi in $U_i=1$.
+Rappresentiamo in figura il bound iperbolico per $n=2$. Da notare che gli asintoti dell'iperbole sono a $U_1=-1$.
+Dal plot possiamo notare che la regione di ammissibilità è più grande per il test H-bound che per il test LL.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pictures/boundIperbolico.png}
+    \caption{Bound iperbolico per RM con $n=2$}
+\end{figure}
+\subsection{RM vs EDF}
+Il problema di schedulare un insieme di task periodici indipendenti e preemptable è stato risolto sia con sistemi a priorità fissa (RM) che con sistemi a priorità dinamica (EDF).
+Il vantaggio principale di sistemi a priorità fissa è la semplicità di implementazione, inoltre se la ready queue è implementata come una queue multi livello con $P$ livelli di priorità,
+sia l'inserimento che la rimozione di un task dalla ready queue richiede $O(1)$ tempo.
+\\
+D'altro canto in uno scheduler deadline driven, la soluzione migliore è l'implementazione tramite heap, dove l'inserimento e la rimozione richiedono $O(\log n)$ tempo.
+Per quanto riguarda l'utilizzo del processore, EDF è in grado di utilizzare completamente la CPU, mentre RM può garantire la fattibilità di task set con fattore di utilizzo minore al 69\% nel caso peggiore.
+\\
+Nonostante la computazione maggiore richiesta da EDF per aggiornare le deadline assoluta a ogni attivazione di task, EDF introduce meno overhead a runtime quando vengono considerati i context switch.
+Infatti, per applicare l'ordine a priorità fissa, il numero di preemption che tipicamente si verifica con RM è \textit{molto maggiore} rispetto a EDF.
+\\
+Una proprietà interessante di EDF durante overload permanenti è che viene performata in automatico un riscalaggio dei periodi, così che si comportino come se venissero eseguiti a frequenza più bassa, questo fenomeno viene chiamato \textbf{graceful degradation} e deve essere evitato.
+Come verrà discusso in seguito, un altro grande vantaggio dello scheduling dinamico rispetto ai sistemi a priorità fissa è una migliore responsività nel gestire task aperiodici.
+Questa proprietà deriva dal fattore di utilizzo del processore maggiore in EDF, infatti il bound minore di RM limita l'utilizzo massimo che può essere assegnato a un server per garantire la schedulabilità di un task set periodico.
+Di conseguenza l'utilizzo di processore che avanza che non può essere assegnata al server viene sprecata come esecuzione di background.
+Questo non avviene con EDF.
+\section{Server a priorità fissa}
+Gli algoritmi di scheduling trattati in precedenza lavorano su task set omogenei, dove tutti le attività computazionali sono periodiche o aperiodiche.
+Nella realtà dei fatti nelle applicazioni di controllo real time i due tipi si possono mischiare, avendo anche diversi livelli di criticità.
+Tipicamente i task periodici sono time-driven ed eseguono attività di controllo critiche con vincoli di temporizzazione hard con lo scopo di garantire la attivazione regolare dei task.
+Quando i task set sono ibridi lo scopo principale del kernel è di garantire la schedulabilità di tutti i task critici nel caso peggiore, e di offrire buoni response time per gli altri.
+Tutti gli algoritmi che verranno trattati in questa sezione sono basati sulle seguenti assunzioni:
+\begin{itemize}
+    \item I task periodici sono schedulati tramite RM (fixed priority).
+    \item Tutti i task periodici iniziano a $t=0$ e le loro deadline relative sono uguali al loro periodo.
+    \item Il tempo di arrivo dei task aperiodici è arbitrario.
+    \item Quando non viene specificato, il minimo tempo di "interarrivo" di un task periodico è uguale alla sua deadline.
+    \item \textbf{Tutti} i task sono preemptable.
+\end{itemize}
+\subsection{Background scheduling}
+È il metodo più semplice per gestire task aperiodici soft in presenza di task periodici, consiste nel schedulare i task aperiodici quando non ci sono istanze di task periodici in stato di ready.
+Il problema principale di questo approccio è che, per carichi periodici elevati, il response time delle richieste aperiodiche può essere troppo lungo per alcune applicazioni.
+Per questo motivo background scheduling può essere adottato solo quando le attività aperiodiche non hanno vincoli di temporizzazione stringenti e il carico di lavoro periodico è basso.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pictures/backgroundScheduling.png}
+    \caption{Esempio di ready queue per background scheduling}  
+    \label{fig:backgroundScheduling}
+\end{figure}
+\noindent
+Il vantaggio principale di background scheduling è la sua semplicità.
+Da notare che come mostrato in figura \ref{fig:backgroundScheduling}, le due strategie di attesa dei task sono indipendenti e possono essere realizzate con algoritmi differenti.
+L'attivazione di un nuovo task periodico causa la preemption di un qualsiasi task aperiodico.
+
+\subsection{Polling server}
+Il tempo di risposta medio di task aperiodici può essere migliorato rispetto a background scheduling attraverso l'utilizzo di un \textbf{server}, ovvero, un task periodico il quale scopo è di servire task aperiodici non appena possibile.
+Come qualsiasi task periodico, il server ha un periodo $T_s$ e un tempo di computazione $C_s$, detto anche \textit{capacità} o \textit{budget}.
+In generale, il server viene schedulato con lo stesso algoritmo usato per gli altri task periodici e, una volta attivo, serve i task aperiodici nel limite del suo budget.
+Da notare che l'ordine in cui vengono serviti i task aperiodici non è determinato dall'algoritmo usato per quelli periodici.
+\\
+Il polling server a intervalli regolari $T_s$  diventa attivo ed esegue task aperiodici nel limite del suo budget $C_s$.
+Se nessun task aperiodico è in attesa, il server si sospende fino al prossimo periodo e il budget viene lasciato a task periodici.
+\subsubsection{Dare una dimensione a un server polling}
+Dato un set di task periodici, come possiamo computare $T_s$ e $C_s$ in maniera da avere uno schedule feasible?
+Prima di tutto calcoliamo il fattore massimo di utilizzo del server $U_s^{max}$, che garantisce la feasibility del task set.
+Dato che il response time non è facile da manipolare a causa di arrotondamenti, possiamo derivare $U_s^{max}$ dal test iperbolico \ref{eq:boundIperbolico}, che è più restrittivo rispetto al test di LL.
+definiamo:
+\begin{equation}
+    P \stackrel{\mathrm{def}}{=} \prod_{i=1}^{n}(U_i+1)
+\end{equation}
+allora dobbiamo avere 
+\begin{equation}
+    P \leq \frac{2}{U_s+1}
+\end{equation}
+ovvero
+\begin{equation}
+    U_s \leq \frac{2-P}{P}
+\end{equation}
+dunque 
+\begin{equation}
+    U_s^{max} = \frac{2-P}{P}
+\end{equation}
+Quindi $U_s$ deve essere minore di $U_s^{max}$. Per un dato $U_s$ ci sono infinite coppie $(C_s,T_s)$, quindi ne dobbiamo selezionare una.
+Una soluzione semplice è assegnare al server la priorità più alta (e quindi in RM con il periodo più breve), però non è utile avere $T_s<T_1$. dato che un piccolo $T_s$ implica un minore $C_s$ e questo causerebbe una maggiore frammentazione (quindi runtime overhead per i cambi di contesto).
+\subsection{Deferrable server}
+Pensato per migliorare i response time per task aperiodici rispetto polling server.
+La differenza è che se nessun task aperiodico è in attesa, il server non si sospende e rimane in attesa (continuando a consumare il budget) fino a quando un task aperiodico non entra nella ready queue e, compatibilmente con il budget rimanente, lo esegue.
+La capacità viene ricaricata all'inizio di ogni periodo.
+DS offre una risposta molto più rapida rispetto al PS, dato che preserva la capacità fino a quando server.
+Tempi di risposta più rapidi possono essere ottenuti dando a DS la priorità più alta tra i task periodici.
+\subsection{Priority exchange}
+Pensato per servire un insieme di task aperiodici soft in presenza di task periodici hard.
+Rispetto a PS e DS è leggermente meno performante in termini di risposta a task aperiodici, ma offre migliori bound di schedulabilità per insiemi di task periodici.
+Come DS e PS utilizza un server periodico (tendenzialmente con alta priorità), con la differenza rispetto DS che riserva la sua capacità ad alta priorità scambiandola con tempo di esecuzione di task periodici a priorità più bassa.
+All'inizio di ogni periodo del server la capacità viene ricaricata. Se dei task aperiodici sono in attesa e il server è il task ready con priorità più alta, allora le richieste vengono servite consumando la capacità, altrimenti $C_s$ viene scambiato con tempo di esecuzione di un task periodico con la priorità più alta.
+\\
+\textbf{Quando uno scambio di priorità avviene il task periodico viene eseguito con il livello di priorità del server mentre il server accumula capacità al livello di priorità del task
+periodico.}\\
+Quindi il task periodico avanza la sua esecuzione e la capacità del server viene conservata a una priorità più bassa.
+Se nessuna richiesta aperiodica arriva ad utilizzare la capacità del server, la sua priorità continua ad abbassarsi fino a quando o viene utilizzata o raggiunge la priorità di processi di background.
+\\
+Dato che l'obiettivo di PE è offrire alta responsività per task aperiodici, tutte le priorità vengono "rotte" a favore dei task aperiodici.
+\subsection{Sporadic server}
+Permette miglioramenti su i tempi di risposta medi su task aperiodici, senza degradare i bound di utilizzo di task set periodici.
+Viene creato un task ad alta priorità per servire i task aperiodici e, come DS, preserva la capacità alla sua priorità alta fino a quando arriva una richiesta aperiodica.
+La differenza rispetto a DS è nel ripristino della capacità, SS ricarica la sua capacità solo dopo che è stata consumata dall'esecuzione di task aperiodici.
+\subsection{Slack stealing}
+Offre miglioramenti sostanziali in termini di response time rispetto a PE, DS e SS.
+A differenza di questi ultimi, non utilizza un server periodico, ma crea un task passivo chiamato \textit{slack stealer},
+che cerca di utilizzare i periodi di slack dei task periodici (il tempo tra la fine dei task e le loro deadline).
+L'idea fondamentale è che, tipicamente, non vi è beneficio nel completare in anticipo task periodici.
+
 
 \end{document}
 
