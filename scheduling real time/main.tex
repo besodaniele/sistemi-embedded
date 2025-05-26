@@ -91,7 +91,7 @@ Le caratteristiche principali sono:
     Infatti, un processo di un'applicazione sarà sempre interrotto da un interrupt di un driver, anche se è più importante che venga servita la periferica.
 \item \textbf{Meccanismo di base per la comunicazione tra processi e sincronizzazione}\\
     Tipicamente semafori binari per la sincronizzazione e la mutua esclusione su risorse condivise.
-    Però, se nessun protocollo d'accesso è utilizzato per entrare in sezioni critiche i semafori possono generare una serie di problemi, ad esempio la \textbf{priority inversion} o deadlokc.
+    Però, se nessun protocollo d'accesso è utilizzato per entrare in sezioni critiche i semafori possono generare una serie di problemi, ad esempio la \textbf{priority inversion} o deadlock.
 \item \textbf{Small kernel e context switch veloce}\\
     Questa feature riduce l'overhead del sistema, dunque migliora il response time medio dell'insieme di task. 
     Ciò nonostante non è sufficiente per garantire il rispetto delle deadline. D'altro canto un kernel piccolo implica limitate funzionalità, il che ha effetto sulla predicibilità del sistema.
@@ -598,6 +598,7 @@ Tutti gli algoritmi che verranno trattati in questa sezione sono basati sulle se
     \item \textbf{Tutti} i task sono preemptable.
 \end{itemize}
 \subsection{Background scheduling}
+\label{sec:backgroundScheduling}
 È il metodo più semplice per gestire task aperiodici soft in presenza di task periodici, consiste nel schedulare i task aperiodici quando non ci sono istanze di task periodici in stato di ready.
 Il problema principale di questo approccio è che, per carichi periodici elevati, il response time delle richieste aperiodiche può essere troppo lungo per alcune applicazioni.
 Per questo motivo background scheduling può essere adottato solo quando le attività aperiodiche non hanno vincoli di temporizzazione stringenti e il carico di lavoro periodico è basso.
@@ -613,6 +614,7 @@ Da notare che come mostrato in figura \ref{fig:backgroundScheduling}, le due str
 L'attivazione di un nuovo task periodico causa la preemption di un qualsiasi task aperiodico.
 
 \subsection{Polling server}
+\label{sec:pollingServer}
 Il tempo di risposta medio di task aperiodici può essere migliorato rispetto a background scheduling attraverso l'utilizzo di un \textbf{server}, ovvero, un task periodico il quale scopo è di servire task aperiodici non appena possibile.
 Come qualsiasi task periodico, il server ha un periodo $T_s$ e un tempo di computazione $C_s$, detto anche \textit{capacità} o \textit{budget}.
 In generale, il server viene schedulato con lo stesso algoritmo usato per gli altri task periodici e, una volta attivo, serve i task aperiodici nel limite del suo budget.
@@ -643,12 +645,14 @@ dunque
 Quindi $U_s$ deve essere minore di $U_s^{max}$. Per un dato $U_s$ ci sono infinite coppie $(C_s,T_s)$, quindi ne dobbiamo selezionare una.
 Una soluzione semplice è assegnare al server la priorità più alta (e quindi in RM con il periodo più breve), però non è utile avere $T_s<T_1$. dato che un piccolo $T_s$ implica un minore $C_s$ e questo causerebbe una maggiore frammentazione (quindi runtime overhead per i cambi di contesto).
 \subsection{Deferrable server}
+\label{sec:deferrableServer}
 Pensato per migliorare i response time per task aperiodici rispetto polling server.
 La differenza è che se nessun task aperiodico è in attesa, il server non si sospende e rimane in attesa (continuando a consumare il budget) fino a quando un task aperiodico non entra nella ready queue e, compatibilmente con il budget rimanente, lo esegue.
 La capacità viene ricaricata all'inizio di ogni periodo.
 DS offre una risposta molto più rapida rispetto al PS, dato che preserva la capacità fino a quando server.
 Tempi di risposta più rapidi possono essere ottenuti dando a DS la priorità più alta tra i task periodici.
 \subsection{Priority exchange}
+\label{sec:priorityExchange}
 Pensato per servire un insieme di task aperiodici soft in presenza di task periodici hard.
 Rispetto a PS e DS è leggermente meno performante in termini di risposta a task aperiodici, ma offre migliori bound di schedulabilità per insiemi di task periodici.
 Come DS e PS utilizza un server periodico (tendenzialmente con alta priorità), con la differenza rispetto DS che riserva la sua capacità ad alta priorità scambiandola con tempo di esecuzione di task periodici a priorità più bassa.
@@ -661,17 +665,79 @@ Se nessuna richiesta aperiodica arriva ad utilizzare la capacità del server, la
 \\
 Dato che l'obiettivo di PE è offrire alta responsività per task aperiodici, tutte le priorità vengono "rotte" a favore dei task aperiodici.
 \subsection{Sporadic server}
+\label{sec:sporadicServer}
 Permette miglioramenti su i tempi di risposta medi su task aperiodici, senza degradare i bound di utilizzo di task set periodici.
 Viene creato un task ad alta priorità per servire i task aperiodici e, come DS, preserva la capacità alla sua priorità alta fino a quando arriva una richiesta aperiodica.
 La differenza rispetto a DS è nel ripristino della capacità, SS ricarica la sua capacità solo dopo che è stata consumata dall'esecuzione di task aperiodici.
 \subsection{Slack stealing}
+\label{sec:slackStealing}
 Offre miglioramenti sostanziali in termini di response time rispetto a PE, DS e SS.
 A differenza di questi ultimi, non utilizza un server periodico, ma crea un task passivo chiamato \textit{slack stealer},
 che cerca di utilizzare i periodi di slack dei task periodici (il tempo tra la fine dei task e le loro deadline).
 L'idea fondamentale è che, tipicamente, non vi è beneficio nel completare in anticipo task periodici.
 
+\subsection{Summary}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{pictures/performanceComparison.png}
+    \caption{Performance dei server}
+    \label{fig:performanceComparison}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{pictures/comparisonServer.png}
+    \caption{Confronto overall dei server}
+    \label{fig:comparisonServer}
+\end{figure}
+\section{Server a priorità dinamica}
+In questa sezione si discute il problema dello schedulare task soft aperiodici e task hard periodici in un sistema a priorità dinamica.
+In particolare l'obbiettivo è ridurre il tempo di risposta medio delle richieste aperiodiche, senza degradare la schedulabilità di task hard periodici.
+I task periodici vengono schedulati con EDF (dunque il fattore di utilizzo massimo del processore è 1).
+L'aumentare del fattore di utilizzo massimo rispetto a RM (0.69) è vantaggioso perché ci permette di aumentare la dimensione massima dei server i.e. $U_s = 1- U_p$.
+Per semplicità facciamo le seguenti assunzioni:
+\begin{itemize}
+\item Tutti i task periodici hanno deadline hard e la loro schedulabilità deve essere garantita off-line.
+\item Tutti i task aperiodici non hanno deadline e devono essere schedulati il prima possibile, senza compromettere la schedulabilità dei task periodici.
+\item La deadline dei task periodici è uguale al loro periodo.
+\item Tutti i task periodici vengono attivati a tempo $t=0$.
+\item Tutti i task aperiodici hanno tempo di computazione noto, ma tempo di arrivo arbitrario.
+\end{itemize}
+\subsection{Dynamic priority exchange server}
+\label{sec:dynamicPriorityExchange}
+Può essere visto come un'estensione del priority exchange server affrontato nella sezione \ref{sec:priorityExchange}.
+L'idea principale è di lasciare che il se rver scambi il suo runtime con il runtime di task periodici di priorità più bassa (in EDF ciò significa deadline più lontana) nel caso non ci siano richieste aperiodiche in attesa.
+In questo modo il runtime del server viene scambiato con il runtime di task periodici, ma mai sprecato perché verrà poi riscattato quando un task aperiodico arriva.
+\subsubsection{Utilizzare lo spare time}
+Nei sistemi hard real-time la garanzia viene effettuata sulla base del worst case scenario, ma quando non viene raggiunto il worst case vi è un tempo di esecuzione minore del WCET.
+Usando un server DPE, il tempo che avanza può essere facilmente utilizzato per eseguire task aperiodici.
+Questo viene fatto aggiungendo lo spare time dei task periodici alla capacità del server corrispondente.
+Da notare che utilizzare lo spare time in questo modo non influisce sulla schedulabilità del sistema.
+\subsection{Dynamic sporadic server}
+\label{sec:dynamicSporadicServer}
+Estensione di sporadic server, trattato nella sezione \ref{sec:sporadicServer}. A differenza di altri server la sua capacità non viene ricaricata a ogni periodo, ma solo quando viene completamente consumata.
+La differenza con lo sporadic server classico è nella priorità del server. SS ha una priorità fissa e viene schedulato con RM, mentre DSS ha una priorità dinamica assegnata in base alla deadline adatta.
+\subsection{Total bandwidth server}
+\label{sec:totalBandwidthServer}
+Osservando l'approccio del dynamic sporadic server è facilmente notabile che, quando il server ha un periodo lungo, l'esecuzione di task aperiodici può essere ritardata per un lungo periodo di tempo.
+Una soluzione è assegnare una deadline più vicina a ogni task aperiodico, questo assegnamento deve essere fatto in maniera che l'utilizzo complessivo del processore non superi mai $U_s$.
+Il nome viene dal fatto che quando una richiesta aperiodica entra nel sistema, l'intera bandwidth del server viene assegnata a essa, se possibile.
+\subsection{Earliest deadline late server}
+\label{sec:earliestDeadlineLateServer}
+Versione dinamica dello slack stealer trattato nella sezione \ref{sec:slackStealing}.
+Utilizziamo i tempi morti per schedulare i task aperiodici il prima possibile.
+Quando non ci sono task aperiodici nel sistema (e nessun task periodico è attivo) il tempo che avanza viene utilizzato prima per i task periodici e poi per quelli aperiodici.
+\subsection{Improved priority exchange server}
+Nonostante sia ottimo, EDL ha troppo runtime overhead per essere considerato nella pratica.
+La pesante computazione può essere evitata utilizzando il meccanismo di priority exchange.
+I tempi morti di EDL possono essere pre calcolati off-line e il server può usarli per schedulare richieste aperiodiche (quando ci sono), o per eseguire task periodici.
+Nel secondo caso il tempo morto può essere considerato come capacità del server per task aperiodici al livello di priorità del task periodico.
+\subsection{Constant bandwith server}
+\label{sec:constantBandwidthServer}
+Come DSS garantisce che, se $U_s$ è la frazione di tempo di CPU utilizzata dal server, il contributo totale del server al fattore utilizzo è minore di $U_s$ anche in caso di overload.
+Con CBS si ottengono performance molto migliori rispetto a DSS, confrontabili con quelle ottenibili con TBS.
+Quando un nuovo task entra nel sistema gli viene assegnata una deadline adatta e viene inserito nella ready queue di EDF.
+Se il task tenta di eseguire più del previsto la sua deadline viene spostata in avanti (ovvero la priorità diminuisce) per ridurre l'interferenza con gli altri task.
+
+
 
 \end{document}
-
-
-
