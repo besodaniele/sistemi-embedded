@@ -24,3 +24,6 @@ dispatcher
 runtime
 ottimalità
 ottimalità
+deadlock
+embedded
+Systems

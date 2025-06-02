@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[12pt,openany,onesided]{book}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb}
@@ -36,7 +36,7 @@
 \maketitle
 \tableofcontents
 \newpage
-\section{Introduzione}
+\chapter{Introduzione}
 
 I sistemi real time sono sistemi di computazione dove la reazione a eventi dell'ambiente deve avvenire entro precisi requisiti temporali.
 Dunque la correttezza della computazione non dipende unicamente dal risultato prodotto, ma anche dal tempo in cui il risultato è prodotto.
@@ -56,7 +56,7 @@ Se tutti i vincoli temporali critici non possono essere verificati a priori e il
 il sistema potrebbe apparentemente funzionare correttamente per un certo periodo di tempo, ma potrebbe fallire in situazioni particolari.
 Il testing, pur essendo importante, non può essere una soluzione per ottenere la predicibilità in un sistema real-time. Questo vale perché 
 il flusso di controllo dipende anche da eventi esterni dell'ambiente, che non possono essere interamente inclusi nel testing.
-\section{Real time}
+\chapter{Real time}
 La correttezza del sistema non dipende solamente dal risultato logico prodotto dalla computazione ma anche dal tempo in cui il risultato è prodotto.
 Il termine reale indica che la reazione del sistema a eventi esterni deve avvenire \textbf{durante} la loro evoluzione.
 Di conseguenza il tempo interno al sistema deve essere misurato usando la stessa scala utilizzata per misurare il tempo dell'ambiente controllato.
@@ -70,7 +70,7 @@ In base alle conseguenze a cui porta il non rispettare la deadline le task posso
 \end{itemize}
 Un sistema in grado di gestire task hard real-time è detto \textbf{hard real-time system}.
 Alcuni di questi sistemi sono tendenzialmente sistemi \textbf{safety critical}.
-\subsection{Limiti dei sistemi real-time correnti}
+\section{Limiti dei sistemi real-time correnti}
 Molti dei sistemi attualmente in uso sono soluzioni basate su kernel, che sono versioni modificate di sistemi operativi a time sharing.
 Una conseguenza di questo è che condividono le stesse feature di base dei sistemi a time sharing, che non sono adatte a sistemi real-time.
 Le caratteristiche principali sono:
@@ -101,7 +101,7 @@ Le caratteristiche principali sono:
     In molti casi non vi sono primitive per controllare esplicitamente i constraint temporali delle task, e non c'è un supporto per l'attivazione automatica delle task periodiche.
 \end{itemize}
 La mancanza di una qualsiasi garanzia preclude l'utilizzo di questi sistemi in casi in cui i requisiti temporali siano stringenti.
-\subsection{Feature desiderabili di un sistema real-time}
+\section{Feature desiderabili di un sistema real-time}
 La predicibilità può essere ottenuta apportando pesanti modifiche ai tipici sistemi a time sharing.
 Alcune proprietà importanti sono:
 \begin{itemize}
@@ -122,7 +122,7 @@ Alcune proprietà importanti sono:
 \item \textbf{Manutenibilità}\\
     L'architettura di un sistema real-time deve essere progettata in maniera modulare per permettere di eseguire modifiche facilmente.
 \end{itemize}
-\section{Fonti di impredicibilità}
+\chapter{Fonti di impredicibilità}
 Un sistema dovrebbe essere in grado di prevedere l'evoluzione delle task e garantire in anticipo che tutti i vincoli temporali critici 
 vengano rispettati.
 L'affidabilità della garanzia dipende da un insieme di fattori, che includono anche le caratteristiche fisiche dell'hardware e 
@@ -134,7 +134,7 @@ pipelining, cache, DMA sono fonti di \textbf{non determinismo}.
 Pur aumentando le performance medie del sistema, introducono fattori di non determinismo che prevengono una precisa stima dei worst-case-execution-time (WCETs).
 Altre caratteristiche che influenzano la predicibilità sono le caratteristiche interne del kernel, come l'algoritmo di scheduling, i meccanismi di sincronizzazione, 
 i tipi di semafori, le politiche di gestione della memoria e le politiche di gestione degli interrupt.
-\subsection{DMA}
+\section{DMA}
 Uno dei modi più comuni per implementarlo è tramite cycle stealing, il DMA controller prende il controllo del bus per un ciclo di clock 
 e poi lo rilascia al processore.
 Durante l'operazione di DMA il trasferimento e l'esecuzione del codice sul processore avvengo in parallelo.
@@ -144,11 +144,11 @@ In questo modo non è possibile prevedere il tempo di esecuzione di un task, dat
 \\
 Una possibile soluzione al problema è il time slicing, dove un ciclo di memoria è diviso in due slot di tempo adiacenti, uno per il DMA e uno per la CPU.
 Questa soluzione è più costosa ma più prevedibile di cycle stealing, dato che il response time di una task non è influenzato dal DMA.
-\subsection{Cache}
+\section{Cache}
 Nei sistemi real-time la cache è una fonte di non determinismo, dato che il tempo di accesso alla memoria dipende dalla presenza o meno del dato in cache.
 Quando avviene un cache miss il tempo di accesso alla memoria è molto più lungo, e questo non è prevedibile.
 Quando si effettua una scrittura in memoria l'utilizzo della cache risulta costoso perché il tempo di accesso alla memoria è più lungo, dato che deve essere garantita la consistenza.
-\subsection{Interrupts}
+\section{Interrupts}
 Un grosso problema per la predicibilità è la gestione degli interrupt provenienti dalle periferiche I/O.
 Se non gestite correttamente possono introdurre ritardi non limitati durante l'esecuzione di processi.\\
 In quasi tutti i sistemi operativi la gestione di un interrupt prevede l'esecuzione di una service routine dedicata per la gestione del device.
@@ -188,7 +188,7 @@ viene eseguito sotto diretto controllo del sistema operativo
 ed è schedulato come un task normale.
 In questo modo la priorità che può essere assegnata al task di gestione del device è completamente indipendente dalle altre priorità 
 e può essere impostata in base ai requisiti del programma.
-\begin{figure*}[h]
+\begin{figure*}[H]
 \centering
 \includegraphics[height=150px]{pictures/approccioC.png}
 \caption{Attivazione task per la gestione del device}
@@ -198,27 +198,27 @@ Il vantaggio principale di questo metodo è che il busy wait viene eliminato e i
 molto ridotto, di conseguenza il tempo di esecuzione del task è più prevedibile.
 Nella maggior parte delle applicazioni pratiche il piccolo overhead portato da questo tipo di driver viene ignorato.
 
-\subsection{Semafori}
+\section{Semafori}
 L'usuale meccanismo dei semafori utilizzato nei sistemi operativi tradizionali non è adatto per i sistemi real-time per via del fenomeno dell'\href{https://en.wikipedia.org/wiki/Priority_inversion}{inversione di priorità}.
 L'inversione di priorità deve essere evitato a tutti i costi in un sistema real-time, dato che introduce non determinismo sull'esecuzione di task critiche.
 Per quanto riguarda il problema della mutua esclusione l'inversione di priorità può essere evitata usando protocolli specifici che devono essere usati ogni 
 volta che si effettua un accesso alla sezione critica.
 L'implementazione di questo tipo di protocollo potrebbe richiedere estensive modifiche al kernel, che non comprendono solo le primitive $wait$ e $signal$, ma anche strutture dati e meccanismi di task management.
-\subsection{Gestione della memoria}
+\section{Gestione della memoria}
 Come gli altri aspetti del kernel, la gestione della memoria deve essere progettata per evitare il non determinismo.
 Ad esempio sistemi di paging on-demand non sono adatti a sistemi con rigidi vincoli temporali a causa dei lunghi e imprevedibili ritardi causati dalle page fault e page replacement.
 LE soluzioni tipiche adottate nei sistemi real-time prevedono regole di segmentazione della memoria con uno schema fisso. Il partizionamento statico è particolarmente efficace quando i programmi richiedono
 una quantità di memoria simile tra loro.
 In generale gli schemi di allocazione statici aumentato la predicibilità del sistema, ma diminuiscono la flessibilità in sistemi dinamici, dunque la scelta progettuale va fatta bilanciando le due caratteristiche.
-\subsection{Linguaggi di programmazione}
+\section{Linguaggi di programmazione}
 Con l'aumentare della complessità dei sistemi real-time aumenta anche la necessità di utilizzare astrazioni offerte dai linguaggi.
 \\
 Purtroppo i linguaggi attualmente a disposizioni non sono abbastanza espressivi da permettere di esprimere certi comportamenti temporali, dunque non sono adatti per la programmazione di sistemi real-time.
 L'esistenza di costrutti che modificano il flusso di controllo del programma in maniera non deterministica, come gli $if$, rende impossibile la stima affidabile dei WCETs in attività concorrenti.
 Un'altra fonte di impredicibilità è data dalla ricorsione, l'analizzatore di scheduling non è in grado di prevedere il numero di chiamate ricorsive e il tempo di esecuzione.
 
-\section{Concetti di base di scheduling}
-\subsection{Introduzione}
+\chapter{Concetti di base di scheduling}
+\section{Introduzione}
 Un \textbf{processo} è una computazione eseguita dalla CPU in maniera sequenziale, d'ora in poi useremo il termine processo come sinonimo di \textit{task} o \textit{thread}.
 \\
 In realtà un processo è una entità più complessa composta da vari task (o thread)
@@ -249,7 +249,7 @@ D'altro canto la preemption distrugge la località dei programmi e introduce ove
 \\
 Uno schedule è detto \textbf{feasible} se tutti i task possono essere eseguiti rispettando l'insieme di vincoli a essi posti.
 Un insieme di task è detto \textbf{schedulabile} se esiste uno schedule che rispetta i vincoli di tutti i task.
-\subsection{Tipi di vincoli di scheduling}
+\section{Tipi di vincoli di scheduling}
 Tipicamente i vincoli applicabili a task real time rientrano in tre classi:
 \begin{itemize}
     \item Vincoli temporali
@@ -327,7 +327,7 @@ Tutti i task bloccati su una stessa risorsa vengono messi in una \textbf{wait qu
 Quando un task in esecuzione utilizza la primitiva \textit{wait} su un semaforo bloccato, entra nello stato di \textbf{wait}, fino a quando un altro task non esegue la primitiva \textit{signal} che sblocca il semaforo.
 Nota che quando un task lascia lo stato di wait non entra immediatamente nello stato di running, ma entra nello stato di ready, cosicché la CPU possa essere assegnata a un task con priorità più alta dall'algoritmo di scheduling.
 
-\subsection{Classificazione di algoritmi di scheduling}
+\section{Classificazione di algoritmi di scheduling}
 Le classi principali di algoritmi di scheduling sono:
 \begin{itemize}
     \item \textbf{Preemptive vs. non preemptive}
@@ -378,7 +378,7 @@ Negli approcci best effort i task potrebbero essere messi in coda in base a dell
 Mediamente le performance di un algoritmo best effort sono migliori rispetto a quelle di un algoritmo basato sulla garanzia, infatti un algoritmo basato sulla garanzia
 potrebbe, basandosi sul caso peggiore, rifiutare inutilmente un task che in realtà sarebbe riuscito a rispettare la deadline.
 
-\section{Scheduling di task aperiodici}
+\chapter{Scheduling di task aperiodici}
 Gli algoritmi affrontati in questa sezione riguardano task aperiodici real-time, eseguiti su una macchina single core.
 Ogni algoritmo è una soluzione a un problema di scheduling espresso come insieme di assunzioni sulle task e criteri di ottimalità da utilizzare.
 Pur essendo pensati per task aperiodici su macchine monoprocesso, molti di questi algoritmi possono essere estesi per lavorare su sistemi multiprocessore o architetture distribuite per lavorare con task set più complessi.
@@ -389,7 +389,7 @@ Per descrivere un problema di scheduling utilizziamo i parametri $\alpha|\beta|\
 \item $\beta$ descrive le task e le caratteristiche delle risorse (preemptive, indipendente vs vincoli di precedenza, attivazione asincrona, etc.)
 \item $\gamma$ è il criterio di ottimalità
 \end{itemize}
-\subsection{Garanzie}
+\section{Garanzie}
 Per garantire che esista uno scheduling feasible dobbiamo mostrare che, nel caso peggiore, tutti i task vengano completati prima delle rispettive deadline.
 Vale a dire che per ogni task dobbiamo mostrare che il tempo di completamento nel caso peggiore $f_i$ è minore o uguale alla rispettiva deadline $d_i$.
 \begin{equation}
@@ -405,7 +405,7 @@ Dunque in un task set con $n$ task il test di garanzia consiste nel verificare c
 \begin{equation}
     \forall i \in \{1,2,\dots ,n\} \sum_{k=1}^i C_j \leqq d_i
 \end{equation}
-\subsection{Earliest Deadline First (EDF)}
+\section{Earliest Deadline First (EDF)}
 Se le task non sono sincrone ma possono avere tempo di arrivo arbitrario, la preemption diventa un fattore importante.
 In generale un problema di scheduling dove la preemption è permessa è sempre più facile da risolvere rispetto allo stesso problema senza preemption.
 Una soluzione elegante a problemi del tipo $1|preem|L_{max}$ è data dall'algoritmo \textbf{Earliest Deadline First} (EDF).
@@ -427,13 +427,13 @@ In questo caso $U_{lub}=1$, quindi un task potrebbe usare il 100\% della CPU ed 
         \sum_{i=1}^{n}\frac{C_i}{T_i}\leq 1
     \end{equation}
 \end{theorem}
-\subsection{EDF con vincoli di precedenza}
+\section{EDF con vincoli di precedenza}
 Consideriamo problemi di scheduling del tipo $1|prec,preem|L_{max}$, dove i task sono soggetti a vincoli di precedenza.
 Il problema di schedulare un insieme di n task con vincoli di precedenza con attivazioni dinamiche può essere risolto in tempo polinomiale \underbar{SOLO} se i task sono preentable.
 L'idea alla base dell'approccio è quella di trasformare  il set di task dipendenti $\mathcal{T}$ in un insieme di task indipendenti $\mathcal{T}^*$ tramite adeguate modifiche ai parametri temporali, dopodiché possiamo applicare l'algoritmo EDF.
 L'algoritmo di trasformazione garantisce che $\mathcal{T}$ sia schedulabile se e solo se $\mathcal{T}*$ è schedulabile. In pratica tutti i release time e le deadline sono modificati in modo che ogni task non possa cominciare prima del predecessore e non possa fare preemption su i suoi successori.
 
-\section{Scheduling di task periodici}
+\chapter{Scheduling di task periodici}
 In molti sistemi real-time di controllo, le attività periodiche compongono la maggior parte della computazione del sistema.
 Quando una applicazione di controllo consiste in molteplici task periodici concorrenti, con vincoli temporali indipendenti, il sistema operativo deve garantire che ogni istanza periodica 
 venga regolarmente attivata con la giusta frequenza e che venga eseguita entro la deadline (che in generale è diversa dal suo periodo).\\
@@ -460,7 +460,7 @@ Altri parametri importanti per i task periodici sono:
     \item \textbf{Hyperperiod}: minimo intervallo di tempo nel quale lo scheduling si ripete.
     \item \textbf{Critical instant} di un task: tempo di arrivo che produce il response time del task più lungo.
 \end{itemize}
-\subsection{Fattore di utilizzo del processore}
+\section{Fattore di utilizzo del processore}
 Dato un insieme di task periodici $\Gamma$, il \textit{fattore di utilizzo} del processore $U$ è la frazione del tempo di CPU che viene utilizzato per eseguire l'insieme di task.
 Dato che $\frac{C_i}{T_i}$ è la frazione di tempo di CPU utilizzata da un task $\tau_i$, il fattore di utilizzo del processore è dato da:
 \begin{equation}
@@ -480,7 +480,7 @@ Dato che $U_{lub}(\Gamma,A)$ è il minimo di tutti gli upper bound, qualsiasi ta
     \item Se $ U_{lub}< U < 1.0$, la schedulabilità viene raggiunta solo se i periodi sono compatibili.
     \item Se $U_{lub} > 1.0 $, il task set \underline{non è schedulabile da nessun algoritmo}.
 \end{itemize}
-\subsection{Timeline scheduling}
+\section{Timeline scheduling}
 Anche noto come \textit{Cyclic Executive}, è uno degli approcci più adottati per gestire task periodici nei sistemi di difesa militari e di controllo di traffico.
 Il metodo consiste nel dividere l'asse temporale in slot di egual lunghezza, nei quali uno o più task vengono allocati per l'esecuzione; in modo da rispettare le frequenze date dai requisiti.
 Un timer sincronizza l'attivazione dei task all'inizio di ogni slot.\\
@@ -505,7 +505,7 @@ In entrambi i casi, il sistema entra in uno stato critico.
 Se il task fallimentare rimane in esecuzione esso può causare un effetto a domino sugli altri task, rompendo l'intero schedule (timeline break).
 Se un task viene abortito mentre compie azioni su risorse condivise, esso può lasciare le risorse in uno stato inconsistente e causare un comportamento non corretto.
 Inoltre è particolarmente sensibile a cambiamenti nei requisiti.
-\subsection{Rate Monotonic Scheduling (RMS)}
+\section{Rate Monotonic Scheduling (RMS)}
 Funziona tramite una semplice regola che assegna la priorità a un task in base alla sua frequenza di attivazione.
 In particolare, task con periodi più brevi hanno priorità più alta.
 Dato che i periodi sono costanti, RM è un sistema fixed priority, ovvero la priorità $P_i$ di un task $i$ non cambia durante l'esecuzione.
@@ -568,7 +568,7 @@ Dal plot possiamo notare che la regione di ammissibilità è più grande per il 
     \includegraphics[width=0.5\textwidth]{pictures/boundIperbolico.png}
     \caption{Bound iperbolico per RM con $n=2$}
 \end{figure}
-\subsection{RM vs EDF}
+\section{RM vs EDF}
 Il problema di schedulare un insieme di task periodici indipendenti e preemptable è stato risolto sia con sistemi a priorità fissa (RM) che con sistemi a priorità dinamica (EDF).
 Il vantaggio principale di sistemi a priorità fissa è la semplicità di implementazione, inoltre se la ready queue è implementata come una queue multi livello con $P$ livelli di priorità,
 sia l'inserimento che la rimozione di un task dalla ready queue richiede $O(1)$ tempo.
@@ -584,7 +584,7 @@ Come verrà discusso in seguito, un altro grande vantaggio dello scheduling dina
 Questa proprietà deriva dal fattore di utilizzo del processore maggiore in EDF, infatti il bound minore di RM limita l'utilizzo massimo che può essere assegnato a un server per garantire la schedulabilità di un task set periodico.
 Di conseguenza l'utilizzo di processore che avanza che non può essere assegnata al server viene sprecata come esecuzione di background.
 Questo non avviene con EDF.
-\section{Server a priorità fissa}
+\chapter{Server a priorità fissa}
 Gli algoritmi di scheduling trattati in precedenza lavorano su task set omogenei, dove tutti le attività computazionali sono periodiche o aperiodiche.
 Nella realtà dei fatti nelle applicazioni di controllo real time i due tipi si possono mischiare, avendo anche diversi livelli di criticità.
 Tipicamente i task periodici sono time-driven ed eseguono attività di controllo critiche con vincoli di temporizzazione hard con lo scopo di garantire la attivazione regolare dei task.
@@ -597,14 +597,14 @@ Tutti gli algoritmi che verranno trattati in questa sezione sono basati sulle se
     \item Quando non viene specificato, il minimo tempo di "interarrivo" di un task periodico è uguale alla sua deadline.
     \item \textbf{Tutti} i task sono preemptable.
 \end{itemize}
-\subsection{Background scheduling}
+\section{Background scheduling}
 \label{sec:backgroundScheduling}
 È il metodo più semplice per gestire task aperiodici soft in presenza di task periodici, consiste nel schedulare i task aperiodici quando non ci sono istanze di task periodici in stato di ready.
 Il problema principale di questo approccio è che, per carichi periodici elevati, il response time delle richieste aperiodiche può essere troppo lungo per alcune applicazioni.
 Per questo motivo background scheduling può essere adottato solo quando le attività aperiodiche non hanno vincoli di temporizzazione stringenti e il carico di lavoro periodico è basso.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{pictures/backgroundScheduling.png}
+    \includegraphics[width=0.7\textwidth]{pictures/backgroundScheduling.png}
     \caption{Esempio di ready queue per background scheduling}  
     \label{fig:backgroundScheduling}
 \end{figure}
@@ -613,7 +613,7 @@ Il vantaggio principale di background scheduling è la sua semplicità.
 Da notare che come mostrato in figura \ref{fig:backgroundScheduling}, le due strategie di attesa dei task sono indipendenti e possono essere realizzate con algoritmi differenti.
 L'attivazione di un nuovo task periodico causa la preemption di un qualsiasi task aperiodico.
 
-\subsection{Polling server}
+\section{Polling server}
 \label{sec:pollingServer}
 Il tempo di risposta medio di task aperiodici può essere migliorato rispetto a background scheduling attraverso l'utilizzo di un \textbf{server}, ovvero, un task periodico il quale scopo è di servire task aperiodici non appena possibile.
 Come qualsiasi task periodico, il server ha un periodo $T_s$ e un tempo di computazione $C_s$, detto anche \textit{capacità} o \textit{budget}.
@@ -644,14 +644,14 @@ dunque
 \end{equation}
 Quindi $U_s$ deve essere minore di $U_s^{max}$. Per un dato $U_s$ ci sono infinite coppie $(C_s,T_s)$, quindi ne dobbiamo selezionare una.
 Una soluzione semplice è assegnare al server la priorità più alta (e quindi in RM con il periodo più breve), però non è utile avere $T_s<T_1$. dato che un piccolo $T_s$ implica un minore $C_s$ e questo causerebbe una maggiore frammentazione (quindi runtime overhead per i cambi di contesto).
-\subsection{Deferrable server}
+\section{Deferrable server}
 \label{sec:deferrableServer}
 Pensato per migliorare i response time per task aperiodici rispetto polling server.
 La differenza è che se nessun task aperiodico è in attesa, il server non si sospende e rimane in attesa (continuando a consumare il budget) fino a quando un task aperiodico non entra nella ready queue e, compatibilmente con il budget rimanente, lo esegue.
 La capacità viene ricaricata all'inizio di ogni periodo.
 DS offre una risposta molto più rapida rispetto al PS, dato che preserva la capacità fino a quando server.
 Tempi di risposta più rapidi possono essere ottenuti dando a DS la priorità più alta tra i task periodici.
-\subsection{Priority exchange}
+\section{Priority exchange}
 \label{sec:priorityExchange}
 Pensato per servire un insieme di task aperiodici soft in presenza di task periodici hard.
 Rispetto a PS e DS è leggermente meno performante in termini di risposta a task aperiodici, ma offre migliori bound di schedulabilità per insiemi di task periodici.
@@ -664,19 +664,18 @@ Quindi il task periodico avanza la sua esecuzione e la capacità del server vien
 Se nessuna richiesta aperiodica arriva ad utilizzare la capacità del server, la sua priorità continua ad abbassarsi fino a quando o viene utilizzata o raggiunge la priorità di processi di background.
 \\
 Dato che l'obiettivo di PE è offrire alta responsività per task aperiodici, tutte le priorità vengono "rotte" a favore dei task aperiodici.
-\subsection{Sporadic server}
+\section{Sporadic server}
 \label{sec:sporadicServer}
 Permette miglioramenti su i tempi di risposta medi su task aperiodici, senza degradare i bound di utilizzo di task set periodici.
 Viene creato un task ad alta priorità per servire i task aperiodici e, come DS, preserva la capacità alla sua priorità alta fino a quando arriva una richiesta aperiodica.
 La differenza rispetto a DS è nel ripristino della capacità, SS ricarica la sua capacità solo dopo che è stata consumata dall'esecuzione di task aperiodici.
-\subsection{Slack stealing}
+\section{Slack stealing}
 \label{sec:slackStealing}
 Offre miglioramenti sostanziali in termini di response time rispetto a PE, DS e SS.
 A differenza di questi ultimi, non utilizza un server periodico, ma crea un task passivo chiamato \textit{slack stealer},
 che cerca di utilizzare i periodi di slack dei task periodici (il tempo tra la fine dei task e le loro deadline).
 L'idea fondamentale è che, tipicamente, non vi è beneficio nel completare in anticipo task periodici.
-
-\subsection{Summary}
+\section{Summary}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{pictures/performanceComparison.png}
@@ -685,11 +684,11 @@ L'idea fondamentale è che, tipicamente, non vi è beneficio nel completare in a
 \end{figure}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{pictures/comparisonServer.png}
+    \includegraphics[width=0.6\textwidth]{pictures/comparisonServer.png}
     \caption{Confronto overall dei server}
     \label{fig:comparisonServer}
 \end{figure}
-\section{Server a priorità dinamica}
+\chapter{Server a priorità dinamica}
 In questa sezione si discute il problema dello schedulare task soft aperiodici e task hard periodici in un sistema a priorità dinamica.
 In particolare l'obbiettivo è ridurre il tempo di risposta medio delle richieste aperiodiche, senza degradare la schedulabilità di task hard periodici.
 I task periodici vengono schedulati con EDF (dunque il fattore di utilizzo massimo del processore è 1).
@@ -702,7 +701,7 @@ Per semplicità facciamo le seguenti assunzioni:
 \item Tutti i task periodici vengono attivati a tempo $t=0$.
 \item Tutti i task aperiodici hanno tempo di computazione noto, ma tempo di arrivo arbitrario.
 \end{itemize}
-\subsection{Dynamic priority exchange server}
+\section{Dynamic priority exchange server}
 \label{sec:dynamicPriorityExchange}
 Può essere visto come un'estensione del priority exchange server affrontato nella sezione \ref{sec:priorityExchange}.
 L'idea principale è di lasciare che il se rver scambi il suo runtime con il runtime di task periodici di priorità più bassa (in EDF ciò significa deadline più lontana) nel caso non ci siano richieste aperiodiche in attesa.
@@ -712,32 +711,244 @@ Nei sistemi hard real-time la garanzia viene effettuata sulla base del worst cas
 Usando un server DPE, il tempo che avanza può essere facilmente utilizzato per eseguire task aperiodici.
 Questo viene fatto aggiungendo lo spare time dei task periodici alla capacità del server corrispondente.
 Da notare che utilizzare lo spare time in questo modo non influisce sulla schedulabilità del sistema.
-\subsection{Dynamic sporadic server}
+\section{Dynamic sporadic server}
 \label{sec:dynamicSporadicServer}
 Estensione di sporadic server, trattato nella sezione \ref{sec:sporadicServer}. A differenza di altri server la sua capacità non viene ricaricata a ogni periodo, ma solo quando viene completamente consumata.
 La differenza con lo sporadic server classico è nella priorità del server. SS ha una priorità fissa e viene schedulato con RM, mentre DSS ha una priorità dinamica assegnata in base alla deadline adatta.
-\subsection{Total bandwidth server}
+\section{Total bandwidth server}
 \label{sec:totalBandwidthServer}
 Osservando l'approccio del dynamic sporadic server è facilmente notabile che, quando il server ha un periodo lungo, l'esecuzione di task aperiodici può essere ritardata per un lungo periodo di tempo.
 Una soluzione è assegnare una deadline più vicina a ogni task aperiodico, questo assegnamento deve essere fatto in maniera che l'utilizzo complessivo del processore non superi mai $U_s$.
 Il nome viene dal fatto che quando una richiesta aperiodica entra nel sistema, l'intera bandwidth del server viene assegnata a essa, se possibile.
-\subsection{Earliest deadline late server}
+\section{Earliest deadline late server}
 \label{sec:earliestDeadlineLateServer}
 Versione dinamica dello slack stealer trattato nella sezione \ref{sec:slackStealing}.
 Utilizziamo i tempi morti per schedulare i task aperiodici il prima possibile.
 Quando non ci sono task aperiodici nel sistema (e nessun task periodico è attivo) il tempo che avanza viene utilizzato prima per i task periodici e poi per quelli aperiodici.
-\subsection{Improved priority exchange server}
+\section{Improved priority exchange server}
 Nonostante sia ottimo, EDL ha troppo runtime overhead per essere considerato nella pratica.
 La pesante computazione può essere evitata utilizzando il meccanismo di priority exchange.
 I tempi morti di EDL possono essere pre calcolati off-line e il server può usarli per schedulare richieste aperiodiche (quando ci sono), o per eseguire task periodici.
 Nel secondo caso il tempo morto può essere considerato come capacità del server per task aperiodici al livello di priorità del task periodico.
-\subsection{Constant bandwith server}
+\section{Constant bandwith server}
 \label{sec:constantBandwidthServer}
 Come DSS garantisce che, se $U_s$ è la frazione di tempo di CPU utilizzata dal server, il contributo totale del server al fattore utilizzo è minore di $U_s$ anche in caso di overload.
 Con CBS si ottengono performance molto migliori rispetto a DSS, confrontabili con quelle ottenibili con TBS.
 Quando un nuovo task entra nel sistema gli viene assegnata una deadline adatta e viene inserito nella ready queue di EDF.
 Se il task tenta di eseguire più del previsto la sua deadline viene spostata in avanti (ovvero la priorità diminuisce) per ridurre l'interferenza con gli altri task.
+\chapter{Protocolli di accesso alle risorse condivise}
+Una \textit{risorsa} è una struttura software che può essere utilizzata da un processo per avanzare la sua esecuzione.
+Una risorsa dedicata a un processo in particolare è detta \textit{risorsa privata}, mentre una \textit{risorsa condivisa} è una risorsa che può essere utilizzata da più processi.
+Una risorsa condivisa protetta rispetto all'accesso concorrente da parte di più processi è detta \textit{risorsa protetta}.
+Una porzione di codice che accede a una risorsa condivisa è detta \textit{sezione critica}.
+Quanto un task deve entrare in una sezione critica deve aspettare fino a quando nessun altro task sta accedendo a quella risorsa.
+Un task che aspetta una risorsa condivisa è detto \textit{bloccato}.
+Quando un task esce dalla sezione critica, la risorsa viene rilasciata e viene detta \textit{free}.
+\\
+I sistemi operativi tipicamente offrono un meccanismo di sincronizzazione, detto \textit{semaforo}.
+Un semaforo è una struttura dati kernel che può essere utilizzata solo attraverso primitive del kernel, tipicamente \texttt{wait} e \texttt{signal}.
+Una risorsa $R_k$ viene protetta da un semaforo $S_k$, ogni sezione critica che accede a $R_k$ deve essere racchiusa tra le primitive \texttt{wait($S_k$)} e \texttt{signal($S_k$)}.
+Tutti i task bloccati da una risorsa vengono messi in una coda associata al semaforo che protegge la risorsa.
+Quando un task running esegue una \texttt{wait} su un semaforo bloccato esso viene messo in wait, fino a quando un altro task esegue una \texttt{signal} su quel semaforo.
+Quando un task lascia lo stato di wait non va in running, ma nello stato di ready, cosicché la CPU possa essere assegnata al task con priorità più alta dall'algoritmo di scheduling.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{pictures/cicloWaitRisorsa.png}
+    \caption{Wait causato da una risorsa condivisa}
+\end{figure}
+\\
+Andremo a descrivere i principali problemi che sorgono in sistemi monoprocessore quando task concorrenti accedono a risorse condivise in mutua esclusione.
+Presenteremo alcuni protocolli di accesso alle risorse pensati per evitare questi problemi e limitare il tempo massimo di blocco di ogni task.
 
-
-
+\section{Inversione di priorità}
+Consideriamo due task $\tau_1$ e $\tau_2$ che condividono una risorsa $R_k$ protetta da un semaforo $S_k$.
+Per garantire la mutua esclusione, le operazioni su questa risorsa condivisa devono essere contenute in una sezione critica racchiusa tra le primitive \texttt{wait($S_k$)} e \texttt{signal($S_k$)}.
+Se la preemption è permessa e $\tau_1$ ha priorità più alta di $\tau_2$, allora $\tau_1$ può essere bloccato da $\tau_2$ in una situazione raffigurata in figura \ref{fig:inversionPriorita}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{pictures/bloccaggio.png}
+    \caption{Esempio di bloccaggio su una risorsa condivisa}
+    \label{fig:inversionPriorita}
+\end{figure}
+In questo esempio il tempo massimo di bloccaggio che $\tau_1$ può subire è uguale al tempo necessario a $\tau_2$ per completare la sua sezione critica.
+Questo bloccaggio non può essere evitato perché è diretta conseguenza della mutua esclusione necessaria per proteggere la risorsa condivisa.
+Sfortunatamente, in generale, il tempo di blocco di un task su una risorsa occupata non può essere limitato dalla durata della sezione critica eseguita da un task con priorità più bassa.
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{pictures/priorityInversion.png}
+    \caption{Esempio di inversione di priorità}
+    \label{fig:inversionePriorita}
+\end{figure}
+Consideriamo l'esempio in figura \ref{fig:inversionePriorita}, dove $\tau_1$, $\tau_2$ e $\tau_3$ hanno priorità decrescenti e $\tau_1$ e $\tau_3$ condividono una risorsa protetta dal semaforo $S$.
+\\
+Se $\tau_3$ inizia a tempo $t_0$, $\tau_1$ potrebbe arrivare a tempo $t_2$ e fare preemption di $\tau_3$ nella sua sezione critica.
+Al tempo $t_3$ $\tau_1$ prova a usare la sua risorsa, ma viene bloccato dal semaforo $S$, dunque $\tau_3$ continua la sua esecuzione della sezione critica.
+Se $\tau_2$ arriva al tempo $t_4$, preempta $\tau_3$ (dato che ha priorità più alta) e aumenta il tempo di bloccaggio di $\tau_1$ per la sua intera durata.
+Quindi si denota che il tempo di bloccaggio massimo di $\tau_1$ non dipende solo dai task che condividono una risorsa con esso, ma anche da altri task!
+Se questa situazione avviene con altri task di priorità intermedia può portare a un blocco senza controllo che può causare il mancato rispetto delle deadline.
+Dunque in generale il tempo di blocco di un task non può essere limitato.
+\\ \\
+Diversi approcci sono stati proposti per evitare l'inversione di priorità, sia in contesti a priorità fissa che dinamica.
+Tutti i metodi sviluppati nel contesto di priorità fissa consistono nell'aumentare la priorità di un task quando accede a un risorsa condivisa, aderendo a un protocollo per entrare e uscire dalle sezioni critiche
+Invece nei sistemi a priorità dinamica (quindi con EDF) vengono modificati i parametri in base alle deadline relative dei task.
+\\\\
+I protocolli che affrontiamo sono:
+\begin{enumerate}
+    \item Non-preemptive protocol (NPP)
+    \item Highest locker priority (HLP), anche noto come Immediate priority ceiling (IPC)
+    \item Priority inheritance protocol (PIP)
+    \item Priority ceiling protocol (PCP)
+    \item Stack resource policy (SRP)
+\end{enumerate}
+I primi quattro sono pensati per sistemi a priorità statica, mentre stack resource policy è pensato per entrambi i contesti.
+\section{Terminologia e assunzioni}
+Consideriamo un insieme di $n$ task periodici $\tau_1,\tau_2,\dots,\tau_n$, dove ogni task $\tau_i$ ha un periodo $T_i$ e un tempo di computazione $C_i$, che cooperano
+attraverso l'uso di $m$ risorse condivise $R_1,R_2,\dots,R_m$.
+Ogni risorsa $R_k$ è protetta da un semaforo $S_k$, dunque ogni sezione critica che accede a $R_k$ deve essere racchiusa tra le primitive \texttt{wait($S_k$)} e \texttt{signal($S_k$)}.
+Dato che un protocollo modifica la priorità di un task, ogni task è caratterizzato da una \textit{priorità nominale} $P_i$ (decisa ad esempio tramite rate monotonic)
+e da una \textit{priorità attiva} $p_i$ ($p_i \geq P_i$) che è dinamica e viene inizialmente impostata uguale a $P_i$.
+\\
+Utilizzeremo le seguenti notazioni:
+\begin{itemize}
+    \item $z_{i,k}$ denota una sezione critica generica del task $\tau_i$ che è protetta da $S_k$.
+    \item $Z_{i,k}$ denota la sezione critica più lunga del task $\tau_i$ che è protetta da $S_k$.
+    \item $z_{i,h}\subset z_{i,k}$ indica che la sezione critica $z_{i,h}$ è una completamente contenuta in $z_{i,k}$.
+    \item $\sigma_i$ denota l'insieme di semafori che possono bloccare $\tau_i$.
+\end{itemize}
+Inoltre, i protocolli proposti funzionano sotto le seguenti assunzioni:
+\begin{itemize}
+    \item I task $\tau_1,\tau_2,\dots,\tau_n$ hanno diverse priorità e sono ordinati in ordine decrescente di priorità nominale, quindi $\tau_1$ ha priorità nominale più alta.
+    \item I task non si sospendono da soli per operazioni di I/O o per primitive esplicite di sincronizzazione (eccetto per semafori bloccati).
+    \item Le sezioni critiche di ogni sono propriamente innestate, ovvero data una coppia qualsiasi $z_{i,k}$ e $z_{i,h}$ allora $z_{i,h}\subset z_{i,k}$ o $z_{i,k}\cap z_{i,h}=\emptyset$.
+\end{itemize}
+\section{Non-preemptive protocol (NPP)}
+Una semplice soluzione per evitare l'inversione di priorità è di disabilitare la preemption durante l'esecuzione di una qualsiasi sezione critica.
+Questo può essere implementato semplicemente aumentando al massimo la priorità di un task quan do entra in una sezione critica.
+\section{Highest locker priority (HLP)}
+Migliora NPP aumentando la priorità di un task che utilizza una risorsa $R_k$ alla priorità più alta tra i task che condividono quella risorsa.
+La priorità dinamica viene cambiata quando entra la sezione critica e viene ripristinata a $P_i$ quando il task esce dalla sezione critica.
+La computazione online della priorità dinamica può essere semplificata assegnando a ogni risorsa $R_k$ un \textit{priority ceiling} $C(R_k)$, che viene computato offline, uguale alla priorità più alta tra i task che condividono quella risorsa.
+\\
+Pur migliorando NPP, contiene una sorgente di pessimismo che potrebbe produrre blocchi non necessari. Infatti, un task viene bloccato nel momento in cui prova a fare preemption, prima che 
+voglia effettivamente utilizzare una risorsa. Se una sezione critica è contenuta in un solo ramo della computazione, allora il blocco potrebbe non essere necessario, dato che il task potrebbe non utilizzare la risorsa eseguendo un altro ramo.
+\section{Priority inheritance protocol (PIP)}
+Evita l'inversione di priorità senza limiti modificando la priorità dei task che causano il blocco.
+In particolare, quando un task $\tau_i$ blocca uno o più task con priorità più alta, assume temporaneamente la priorità più alta tra i task che sono bloccati da esso.
+\\
+I task vengono schedulati secondo le loro priorità attive, task con la stessa priorità attiva vengono schedulati in ordine di arrivo.
+Quando un task $\tau_i$ cerca di entrare nella sezione critica $z_{i,k}$ e la risorsa $R_k$ è utilizzata da un task $t_j$ con priorità più bassa, allora $\tau_i$ viene bloccato.
+Quando il task $t_j$ è bloccato da un semaforo, trasmette la sua priorità attiva al task $tau_k$ che lo ha bloccato. In generale un task assume la priorità più alta tra i task che sono bloccati da esso.
+Quando $\tau_i$ esce dalla sezione critica sblocca il semaforo, e il task con priorità più alta che è bloccato da esso (se c'è) viene sbloccato.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pictures/PIP.png}
+    \caption{Esempio di priority inheritance}
+    \label{fig:priorityInheritance}
+\end{figure}
+\noindent
+Dalla figura \ref{fig:priorityInheritance} possiamo notare che esistono due modi in cui un task a priorità più alta può essere bloccato:
+\begin{itemize}
+    \item \textbf{Bloccaggio diretto}: quando un task con priorità più alta entra in una sezione critica e trova la risorsa occupata da un task con priorità più bassa. Necessario per garantire la consistenza della risorsa condivisa.
+    \item \textbf{Bloccaggio push-trough}: quando un task a priorità media è bloccato da un task con priorità più bassa che ha ereditato la priorità di un task con priorità più alta che ha bloccato. Necessario per evitare l'inversione di priorità.
+\end{itemize}
+Nonostante PIP limiti il fenomeno di inversione di priorità, la durata del blocco di un task può essere sostanziale a causa di un blocco a catena che si viene a formare.
+Un altro problema è la possibilità di avere un deadlock.
+\subsection{Blocco a catena}
+Consideriamo tre task $\tau_1$, $\tau_2$ e $\tau_3$ con priorità decrescente, che condividono due semafori $S_a$ e $S_b$.
+Supponiamo che $\tau_1$ richieda di accedere sequenzialmente a $S_a$ e $S_b$, $\tau_2$ acceda a $S_b$ e $tau_3$ acceda a $S_a$.
+Inoltre consideriamo che $\tau_3$ blocchi $S_a$ e che sia preempted da $\tau_2$ mentre si trova nella sezione critica.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/chainedBlocking.png}
+    \caption{Esempio di blocco a catena}
+    \label{fig:bloccoACatena}
+\end{figure}
+\noindent
+Come mostrato in figura \ref{fig:bloccoACatena}, quando $\tau_1$ prova a usare le sue risorse viene bloccato per un tempo uguale alla durata di due sezioni critiche, una volta aspetta che
+$\tau_3$ rilasci $S_a$ e una volta aspetta che $\tau_2$ rilasci $S_b$.
+Nel caso peggiore, se $\tau_1$ accede a $n$ semafori distinti che sono stati bloccati da $n$ task di priorità più bassa, $\tau_1$ verrà bloccato per il tempo di $n$ sezioni critiche.
+\subsection{Deadlock}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/deadlock.png}
+    \caption{Esempio di deadlock}
+    \label{fig:deadlock}
+\end{figure}
+Considera due task che usano due semafori in maniera innestata, ma in ordine inverso, come raffigurato in figura \ref{fig:deadlock}.
+Ora supponi che al tempo $t_1$ il task $\tau_2$ blocchi il semaforo $S_b$ e che entri nella sezione critica.
+Al tempo $t_2$, $\tau_1$ preempta $\tau_2$ prima che possa bloccare $S_a$.
+Al tempo $t_3$, $\tau_1$ blocca $S_a$, che è libero, ma poi viene bloccato da $S_b$ al tempo $t_4$.
+A questo punto $\tau_2$ riprende l'esecuzione alla priorità di $\tau_1$. PIP non previene il deadlock, che avviene al tempo $t_5$, quando $\tau_2$ prova a bloccare $S_a$.
+Nota che il deadlock non è causato da PIP in sé, ma da un errato utilizzo dei semafori. 
+\section{Priority ceiling protocol (PCP)}
+Creato per evitare l'inversione di priorità, il blocco a catena e il deadlock.
+L'idea di base è di estendere PIP con un regola per garantire una richiesta di lock su un semaforo libero.
+Per evitare blocchi multipli, questa regolare deve vietare che un task entri in una sezione critica se c'è un semaforo che potrebbe bloccarlo.
+Questo vuol dire che, una volta che entra nella sua prima sezione critica, un task non può mai essere bloccato da un task di priorità più bassa fino al suo completamento.
+Quindi l'idea in generale è di assegnare a ogni semaforo un \textit{priority ceiling}, uguale alla priorità più alta tra i task che possono bloccare quel semaforo.
+Allora un task $\tau_i$ può entrare in una sezione critica solo se la sua priorità è maggiore di tutti i priority ceiling dei semafori al momento bloccati da altri task oltre $\tau_i$.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{pictures/priorityCeiling.png}
+    \caption{Esempio di priority ceiling protocol}
+    \label{fig:priorityCeilingProtocol}
+\end{figure}
+Da notare in figura \ref{fig:priorityCeilingProtocol} che viene aggiunta una terza forma di blocco, detto \textit{ceiling blocking}, in aggiunta a quello diretto e push-through causati da PIP.
+Necessario a evitare il deadlock e il blocco a catena.
+\section{Stack resource policy (SRP)}
+Estensione di PCP, i tre punti essenziali sono:
+\begin{enumerate}
+    \item Permette l'uso di risorse multi-unità (?)
+    \item Supporta lo scheduling a priorità dinamica.
+    \item Permette la condivisione di risorse basate sullo stack a runtime (??)
+\end{enumerate}
+La differenza sostanziale dal punto di vista dello scheduling tra SRP e PCP sta nel momento in cui un task viene bloccato.
+In PCP un task viene bloccato nel momento in cui richiede per la prima volta una risorsa, in SRP un task è bloccato nel momento in cui prova a fare preemption.
+Questo blocco prematuro riduce leggermente la concorrenza, ma riduce i cambi di contesto non necessari, semplificando l'implementazione.\\\\
+Prima di procedere è necessario definire alcune notazioni.
+\subsubsection{Priorità}
+A ogni task $\tau_i$ viene assegnata una priorità $p_i$, che indica la sua importanza (ovvero l'urgenza) rispetto agli altri task del sistema.
+La priorità di un task può essere statica (fissa) o dinamica (cambia durante l'esecuzione).
+A ogni momento $t$, $p_a > p_b$ indica che l'esecuzione di $\tau_a$ è più urgente di quella di $\tau_b$: dunque $\tau_b$ può essere ritardato in favore di $\tau_a$.
+\subsubsection{Livello di preemption}
+Un task è caratterizzato anche da un livello di preemption $\pi_i$.
+Il livello di preemption è statico e viene assegnato al momento della creazione del task, viene associato a ogni istanza di quel task.
+Un task $\tau_a$ può preemptare un task $\tau_b$ se e solo se $\pi_a > \pi_b$. Questo è vero anche considerando le priorità.
+\begin{quote}
+In generale, se $\tau_a$ arriva dopo $\tau_b$ e $\tau_a$ ha una priorità più alta di $\tau_b$, allora $\tau_a$ deve avere un livello di preemption più alto di $\tau_b$.
+\end{quote}
+Con EDF, la condizione precedente è soddisfatta se i livelli di preemption sono ordinati in maniera inversa rispetto alle deadline relative dei task, ovvero:
+\begin{equation*}
+    \pi_i > \pi_j \iff D_i < D_j
+\end{equation*}
+\subsubsection{Resource units}
+Ogni risorsa $R_k$ può avere $N_k$ unità che possono essere utilizzate in maniera concorrente da più task.
+In generale $n_k$ denota il numero di unità al momento disponibili di $R_k$, quindi $N_k-n_k$ risorse sono bloccate.
+\subsubsection{Resource requirements}
+Quando si entra nella sezione critica $z_{i,k}$, protetta dal semaforo $S_k$, un task $\tau_i$ deve specificare il numero di unità di cui necessita nella chiamata a \texttt{wait($S_k$,$r$)}.
+Quando esce dalla sezione critica, il task rilascia tutte le unità con \texttt{signal($S_k$)}.
+\\
+Il massimo numero di unità che possono essere simultaneamente richiesta da $\tau_i$ di $R_k$ è denotato da $\mu_i(R_k)$, che può essere calcolato offline analizzando il codice del task.
+\subsubsection{Resource ceiling}
+A ogni risorsa $R_k$ viene associato un \textit{resource ceiling} $C_{Rk}(n_k)$, uguale al massimo livello di preemption dei task che possono essere bloccati su $R_k$ (assumendo la richiesta massima)
+Quindi è una funzione dinamica rispetto al numero di unità disponibili $n_k$.
+\subsubsection{System ceiling}
+Il massimo dei ceiling delle risorse, ovvero:
+\begin{equation*}
+    \Pi_s = \max_{k} \{C_{R_k}\}
+\end{equation*}
+Nota che è un parametro dinamico che cambia ogni volta che una risorsa viene rilasciata o richiesta.
+\subsection{Definizione}
+Dunque l'idea chiave di SRP è che quando un task ha bisogno di una risorsa che non è disponibile esso venga bloccato al momento in cui prova a fare preemption.
+Inoltre, per prevenire l'inversione di priorità, un task non può iniziare fino a quando le risorse al momento disponibili sono sufficienti per rispettare la massima richiesta di ogni task che potrebbe farlo preemptare.
+\\
+Possiamo effettuare il seguente test: \\
+\begin{quote}
+    Un task non può fare preemption fino a che la sua priorità non è la più alta tra tutti i task che sono in stato di ready, e il suo livello di preemption è
+    più alto del system ceiling.
+\end{quote}
+Se la ready queue è ordinata in base a priorità decrescente, allora il preemption test può essere fatto semplicemente confrontando il livello di preemption $\pi_i(\tau)$ del task ready con priorità più alta
+(quello in testa alla ready queue) con il system ceiling.
+Se $\pi_i(\tau) > \Pi_s$ allora il task viene eseguito, altrimenti rimane nella ready queue fino a quando $\Pi_s < \pi_i(\tau)$.
+La condizione va testata ogni volta che $ \Pi_s $ diminuisce, ovvero quando una risorsa viene rilasciata.
 \end{document}
