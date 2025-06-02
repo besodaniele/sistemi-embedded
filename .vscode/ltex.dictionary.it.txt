@@ -27,3 +27,4 @@ ottimalità
 deadlock
 embedded
 Systems
+schedulabilità

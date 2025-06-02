@@ -706,6 +706,12 @@ Per semplicità facciamo le seguenti assunzioni:
 Può essere visto come un'estensione del priority exchange server affrontato nella sezione \ref{sec:priorityExchange}.
 L'idea principale è di lasciare che il se rver scambi il suo runtime con il runtime di task periodici di priorità più bassa (in EDF ciò significa deadline più lontana) nel caso non ci siano richieste aperiodiche in attesa.
 In questo modo il runtime del server viene scambiato con il runtime di task periodici, ma mai sprecato perché verrà poi riscattato quando un task aperiodico arriva.
+Quando l'entità con priorità più alta nel sistema è il server con capacità $C$ allora:
+\begin{itemize}
+    \item Se ci sono richieste aperiodiche nel sistema allora queste vengono servite fino a quando vengono completate o la capacità del server viene esaurita.
+    \item Se non ci sono richieste aperiodiche da soddisfare allora viene eseguito il task periodico con la deadline relativa più vicina, viene aggiunta alla capacità del server il tempo di esecuzione 
+    \item e viene sottratta alla deadline del server.
+\end{itemize}
 \subsubsection{Utilizzare lo spare time}
 Nei sistemi hard real-time la garanzia viene effettuata sulla base del worst case scenario, ma quando non viene raggiunto il worst case vi è un tempo di esecuzione minore del WCET.
 Usando un server DPE, il tempo che avanza può essere facilmente utilizzato per eseguire task aperiodici.
@@ -720,22 +726,50 @@ La differenza con lo sporadic server classico è nella priorità del server. SS 
 Osservando l'approccio del dynamic sporadic server è facilmente notabile che, quando il server ha un periodo lungo, l'esecuzione di task aperiodici può essere ritardata per un lungo periodo di tempo.
 Una soluzione è assegnare una deadline più vicina a ogni task aperiodico, questo assegnamento deve essere fatto in maniera che l'utilizzo complessivo del processore non superi mai $U_s$.
 Il nome viene dal fatto che quando una richiesta aperiodica entra nel sistema, l'intera bandwidth del server viene assegnata a essa, se possibile.
+Una volta che la priorità viene assegnata, la richiesta viene inserita nella ready queue del sistema e schedulata con EDF come ogni altro task periodico, di conseguenza l'overhead di questo algoritmo è risibile.
 \section{Earliest deadline late server}
 \label{sec:earliestDeadlineLateServer}
 Versione dinamica dello slack stealer trattato nella sezione \ref{sec:slackStealing}.
 Utilizziamo i tempi morti per schedulare i task aperiodici il prima possibile.
-Quando non ci sono task aperiodici nel sistema (e nessun task periodico è attivo) il tempo che avanza viene utilizzato prima per i task periodici e poi per quelli aperiodici.
+L'idea di base è di utilizzare i tempi morti per eseguire i task aperiodici il prima possibile. Quando non ci sono attività aperiodiche nel sistema, i task periodici vengono schedulati
+secondo EDF. Quando una nuova richiesta aperiodiche entra nel sistema (e nessuna richiesta aperiodica è ancora attiva) i tempi morti del task set periodico corrente vengono calcolati e usati per schedulare i task aperiodici.
+
 \section{Improved priority exchange server}
 Nonostante sia ottimo, EDL ha troppo runtime overhead per essere considerato nella pratica.
 La pesante computazione può essere evitata utilizzando il meccanismo di priority exchange.
 I tempi morti di EDL possono essere pre calcolati off-line e il server può usarli per schedulare richieste aperiodiche (quando ci sono), o per eseguire task periodici.
-Nel secondo caso il tempo morto può essere considerato come capacità del server per task aperiodici al livello di priorità del task periodico.
+Nel secondo caso il tempo morto può essere considerato come capacità del server per task aperiodici al livello di priorità del task periodico eseguito.
+Il server non risulta quindi più periodico, ma viene sempre eseguito con la priorità più alta del sistema.
 \section{Constant bandwith server}
 \label{sec:constantBandwidthServer}
-Come DSS garantisce che, se $U_s$ è la frazione di tempo di CPU utilizzata dal server, il contributo totale del server al fattore utilizzo è minore di $U_s$ anche in caso di overload.
-Con CBS si ottengono performance molto migliori rispetto a DSS, confrontabili con quelle ottenibili con TBS.
-Quando un nuovo task entra nel sistema gli viene assegnata una deadline adatta e viene inserito nella ready queue di EDF.
-Se il task tenta di eseguire più del previsto la sua deadline viene spostata in avanti (ovvero la priorità diminuisce) per ridurre l'interferenza con gli altri task.
+Come DSS garantisce che, se $U_s$ è la frazione di tempo di CPU utilizzata dal server (bandwidth), il contributo totale del server al fattore utilizzo è minore di $U_s$ anche in caso di overload.
+Con CBS si ottengono performance molto migliori rispetto a DSS, confrontabili con quelle ottenibili con TBS.\\
+L'idea di base è che quando un nuovo task entra nel sistema gli venga assegnata una deadline adatta e venga inserito nella ready queue di EDF.
+Se il task prova a eseguire per più del tempo che abbiamo assegnato la sua deadline viene spostata in avanti (ovvero la priorità viene abbassata) per diminuire l'interferenza con altri task.
+Nota che abbassando la priorità del task comunque rimane possibilmente il task da eseguire. 
+In questa maniera CBS si comporta come un algoritmo conservativo, sfruttando lo slack disponibile in maniera efficiente (in maniera deadline driven).
+Se un sottoinsieme di task viene gestito da un solo server, tutti i task di quel sottoinsieme condividono la stessa bandwidth, quindi non c'è isolazione tra loro.
+Tutti gli altri task sono protetti rispetto a sforamenti interni a quel sottoinsieme.\\
+Definiamo CBS:
+\begin{itemize}
+    \item Un CBS è caratterizzato da un budget $c_s$ e da una coppia ordinata $(Q_s,T_s)$, dove $Q_s$ è il budget massimo e $T_s$ è il periodo del server.
+    Invece la bandwidth del server è definita come $U_s = \frac{Q_s}{T_s}$.
+    A ogni istante una deadline fissa $d_{s,k}$ viene associata al server. All'inizio $d_{s,0} = 0$.
+    \item A ogni job servito $J_{i,j}$ viene associata una deadline dinamica $d_{i,j}$ uguale alla deadline corrente del server $d_{s,k}$.
+    \item Quando un job del server viene eseguito, il budget $c_s$ viene diminuito della durata del job.
+    \item Quando il budget $c_s$ viene esaurito, viene ricaricato a $Q_s$ e una nuova deadline viene calcolata come $d_{s,k+1} = d_{s,k} + T_s$. (nota che non esistono intervalli finiti in cui il budget è zero).
+    \item Un CBS è detto attivo se ci sono jobs in attesa di essere eseguiti, altrimenti è detto inattivo.
+    \item Quando un job $J_{i,j}$ arriva e il server è attivo la richiesta viene inserita nella queue dei job in attesa, che rispetta una disciplina arbitraria.
+    \item Quando un job $J_{i,j}$ arriva e il server è inattivo, se $c_s \geq (d_{s,k}-r_{i,j})U_s$ il server genera una nuova deadline $d_{s,k+1} = r_{i,j} + T_s$ e il budget viene ricaricato a $Q_s$,
+    Altrimenti il job viene servito con deadline $d_{s,k}$ usando il budget corrente.
+    \item Quando un job termina, il prossimo job in coda (se esiste) viene servito usando il budget e deadline correnti. Se non ci sono jobs in coda, il server diventa inattivo.
+    \item A ogni istante, a un job viene assegnato l'ultima deadline generata dal server.
+\end{itemize}
+Una proprietà interessante è quella dell'isolamento, ovvero, possiamo usare una strategia di preservamento della bandwidth per allocare una frazione del tempo di CPU per soft task per cui il
+tempo di esecuzione non può essere facilmente delimitato. La conseguenza più importante è che i task soft possono essere schedulati assieme a task hard senza avere effetto sulla garanzia a priori di schedulabilità,
+anche nel caso in cui i tempi di computazione dei task soft effettivi superino quelli previsti.
+
+
 \chapter{Protocolli di accesso alle risorse condivise}
 Una \textit{risorsa} è una struttura software che può essere utilizzata da un processo per avanzare la sua esecuzione.
 Una risorsa dedicata a un processo in particolare è detta \textit{risorsa privata}, mentre una \textit{risorsa condivisa} è una risorsa che può essere utilizzata da più processi.
