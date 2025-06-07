@@ -82,7 +82,7 @@ Le caratteristiche principali sono:
     Meccanismo flessibile di scheduling, dato che permette di implementare diverse strategie in base alla maniera in cui assegno le priori
     Nonostante ciò, mappare i constraint a un insieme di priorità è difficile e non sempre possibile, specialmente in un sistema dinamico.
     Il problema principale è che i kernel permettono un \textbf{numero limitato di livelli di priorità}, mentre le deadline possono variare molto di più.
-    In sistemi dinamici l'arrvo di una nuova task può comportare un remappaggio dell'intero insieme di priorità.
+    In sistemi dinamici l'arrivo di una nuova task può comportare un remappaggio dell'intero insieme di priorità.
 \item \textbf{Capacità di rispondere velocemente agli interrupt}\\
     Solitamente questa feature viene ottenuta tramite la possibilità di impostare una priorità per gli interrupt, più alta rispetto alla priorità dei processi e 
     riducendo al minimo le porzioni di codice eseguite con le interruzioni disabilitate.
@@ -395,7 +395,7 @@ Vale a dire che per ogni task dobbiamo mostrare che il tempo di completamento ne
 \begin{equation}
     f_i \leq d_i , \forall i \in \{1,2,\ldots,n\}
 \end{equation}
-Se un task ha requisiti hard, quest'analisi di fattiblità deve essere effettuata prima dell'esecuzione dei task.
+Se un task ha requisiti hard, quest'analisi di fattibilità deve essere effettuata prima dell'esecuzione dei task.
 Senza perdita di generalità possiamo assumere che i task $J_1,J_2,\dots J_n$ siano elencati in ordine di deadline crescente, ovvero $J_1$ ha la deadline più vicina.
 In questo caso il tempo di completamento del task $J_i$ nel caso peggiore è dato da:
 \begin{equation}
@@ -704,7 +704,7 @@ Per semplicità facciamo le seguenti assunzioni:
 \section{Dynamic priority exchange server}
 \label{sec:dynamicPriorityExchange}
 Può essere visto come un'estensione del priority exchange server affrontato nella sezione \ref{sec:priorityExchange}.
-L'idea principale è di lasciare che il se rver scambi il suo runtime con il runtime di task periodici di priorità più bassa (in EDF ciò significa deadline più lontana) nel caso non ci siano richieste aperiodiche in attesa.
+L'idea principale è di lasciare che il server scambi il suo runtime con il runtime di task periodici di priorità più bassa (in EDF ciò significa deadline più lontana) nel caso non ci siano richieste aperiodiche in attesa.
 In questo modo il runtime del server viene scambiato con il runtime di task periodici, ma mai sprecato perché verrà poi riscattato quando un task aperiodico arriva.
 Quando l'entità con priorità più alta nel sistema è il server con capacità $C$ allora:
 \begin{itemize}
@@ -740,7 +740,7 @@ La pesante computazione può essere evitata utilizzando il meccanismo di priorit
 I tempi morti di EDL possono essere pre calcolati off-line e il server può usarli per schedulare richieste aperiodiche (quando ci sono), o per eseguire task periodici.
 Nel secondo caso il tempo morto può essere considerato come capacità del server per task aperiodici al livello di priorità del task periodico eseguito.
 Il server non risulta quindi più periodico, ma viene sempre eseguito con la priorità più alta del sistema.
-\section{Constant bandwith server}
+\section{Constant bandwidth server}
 \label{sec:constantBandwidthServer}
 Come DSS garantisce che, se $U_s$ è la frazione di tempo di CPU utilizzata dal server (bandwidth), il contributo totale del server al fattore utilizzo è minore di $U_s$ anche in caso di overload.
 Con CBS si ottengono performance molto migliori rispetto a DSS, confrontabili con quelle ottenibili con TBS.\\
@@ -748,7 +748,7 @@ L'idea di base è che quando un nuovo task entra nel sistema gli venga assegnata
 Se il task prova a eseguire per più del tempo che abbiamo assegnato la sua deadline viene spostata in avanti (ovvero la priorità viene abbassata) per diminuire l'interferenza con altri task.
 Nota che abbassando la priorità del task comunque rimane possibilmente il task da eseguire. 
 In questa maniera CBS si comporta come un algoritmo conservativo, sfruttando lo slack disponibile in maniera efficiente (in maniera deadline driven).
-Se un sottoinsieme di task viene gestito da un solo server, tutti i task di quel sottoinsieme condividono la stessa bandwidth, quindi non c'è isolazione tra loro.
+Se un sottoinsieme di task viene gestito da un solo server, tutti i task di quel sottoinsieme condividono la stessa bandwidth, quindi non c'è isolamento tra loro.
 Tutti gli altri task sono protetti rispetto a sforamenti interni a quel sottoinsieme.\\
 Definiamo CBS:
 \begin{itemize}
@@ -765,7 +765,7 @@ Definiamo CBS:
     \item Quando un job termina, il prossimo job in coda (se esiste) viene servito usando il budget e deadline correnti. Se non ci sono jobs in coda, il server diventa inattivo.
     \item A ogni istante, a un job viene assegnato l'ultima deadline generata dal server.
 \end{itemize}
-Una proprietà interessante è quella dell'isolamento, ovvero, possiamo usare una strategia di preservamento della bandwidth per allocare una frazione del tempo di CPU per soft task per cui il
+Una proprietà interessante è quella dell'isolamento, ovvero, possiamo usare una strategia di preservazione della bandwidth per allocare una frazione del tempo di CPU per soft task per cui il
 tempo di esecuzione non può essere facilmente delimitato. La conseguenza più importante è che i task soft possono essere schedulati assieme a task hard senza avere effetto sulla garanzia a priori di schedulabilità,
 anche nel caso in cui i tempi di computazione dei task soft effettivi superino quelli previsti.
 
@@ -857,7 +857,7 @@ Inoltre, i protocolli proposti funzionano sotto le seguenti assunzioni:
 \end{itemize}
 \section{Non-preemptive protocol (NPP)}
 Una semplice soluzione per evitare l'inversione di priorità è di disabilitare la preemption durante l'esecuzione di una qualsiasi sezione critica.
-Questo può essere implementato semplicemente aumentando al massimo la priorità di un task quan do entra in una sezione critica.
+Questo può essere implementato semplicemente aumentando al massimo la priorità di un task quando entra in una sezione critica.
 \section{Highest locker priority (HLP)}
 Migliora NPP aumentando la priorità di un task che utilizza una risorsa $R_k$ alla priorità più alta tra i task che condividono quella risorsa.
 La priorità dinamica viene cambiata quando entra la sezione critica e viene ripristinata a $P_i$ quando il task esce dalla sezione critica.
