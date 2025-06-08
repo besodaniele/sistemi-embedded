@@ -137,8 +137,8 @@ i tipi di semafori, le politiche di gestione della memoria e le politiche di ges
 \section{DMA}
 Uno dei modi più comuni per implementarlo è tramite cycle stealing, il DMA controller prende il controllo del bus per un ciclo di clock 
 e poi lo rilascia al processore.
-Durante l'operazione di DMA il trasferimento e l'esecuzione del codice sul processore avvengo in parallelo.
-SE la CPU e il DMA controller richiedono un ciclo di memoria allo stesso tempo, il bus viene assegnato al DMA controller e la CPU
+Durante l'operazione di DMA il trasferimento e l'esecuzione del codice sul processore avvengono in parallelo.
+Se la CPU e il DMA controller richiedono un ciclo di memoria allo stesso tempo, il bus viene assegnato al DMA controller e la CPU
 aspetta finché il DMA non ha finito.
 In questo modo non è possibile prevedere il tempo di esecuzione di un task, dato che il tempo di esecuzione dipende da quante volte il DMA controller ha bisogno del bus.
 \\
@@ -207,7 +207,7 @@ L'implementazione di questo tipo di protocollo potrebbe richiedere estensive mod
 \section{Gestione della memoria}
 Come gli altri aspetti del kernel, la gestione della memoria deve essere progettata per evitare il non determinismo.
 Ad esempio sistemi di paging on-demand non sono adatti a sistemi con rigidi vincoli temporali a causa dei lunghi e imprevedibili ritardi causati dalle page fault e page replacement.
-LE soluzioni tipiche adottate nei sistemi real-time prevedono regole di segmentazione della memoria con uno schema fisso. Il partizionamento statico è particolarmente efficace quando i programmi richiedono
+Le soluzioni tipiche adottate nei sistemi real-time prevedono regole di segmentazione della memoria con uno schema fisso. Il partizionamento statico è particolarmente efficace quando i programmi richiedono
 una quantità di memoria simile tra loro.
 In generale gli schemi di allocazione statici aumentato la predicibilità del sistema, ma diminuiscono la flessibilità in sistemi dinamici, dunque la scelta progettuale va fatta bilanciando le due caratteristiche.
 \section{Linguaggi di programmazione}
@@ -403,7 +403,7 @@ In questo caso il tempo di completamento del task $J_i$ nel caso peggiore è dat
 \end{equation}
 Dunque in un task set con $n$ task il test di garanzia consiste nel verificare che:
 \begin{equation}
-    \forall i \in \{1,2,\dots ,n\} \sum_{k=1}^i C_j \leqq d_i
+    \forall i \in \{1,2,\dots ,n\} \sum_{k=1}^i C_j \leq d_i
 \end{equation}
 \section{Earliest Deadline First (EDF)}
 Se le task non sono sincrone ma possono avere tempo di arrivo arbitrario, la preemption diventa un fattore importante.
@@ -419,7 +419,7 @@ Da notare che EDF non fa assunzioni esplicite sulla periodicità dei task, dunqu
 Quando i task hanno attivazioni dinamiche e il tempo di arrivo non è noto a priori, il test di garanzia deve essere fatto dinamicamente ogni volta che un task entra nel sistema.
 Sia $\mathcal{T}$ l'insieme corrente di task attivi, che sono stati garantiti in precedenza, sia $J_{new}$ il nuovo task che entra nel sistema.
 Per poter accettare $J_{new}$ dobbiamo garantire che il nuovo task set $\mathcal{T} \cup J_{new}$ sia schedulabile.\\
-Sotto le assunzioni di \ref{assunzioni} possiamo verificare la schedulabilità di un task set periodico con EDF attraverso il fattore di utilizzo del processore.
+Sotto le assunzioni esplicitate nella sezione \ref{assunzioni} possiamo verificare la schedulabilità di un task set periodico con EDF attraverso il fattore di utilizzo del processore.
 In questo caso $U_{lub}=1$, quindi un task potrebbe usare il 100\% della CPU ed essere schedulabile.
 \begin{theorem}
     Un task set di task periodici è schedulabile da EDF se e solo se:
@@ -431,7 +431,7 @@ In questo caso $U_{lub}=1$, quindi un task potrebbe usare il 100\% della CPU ed 
 Consideriamo problemi di scheduling del tipo $1|prec,preem|L_{max}$, dove i task sono soggetti a vincoli di precedenza.
 Il problema di schedulare un insieme di n task con vincoli di precedenza con attivazioni dinamiche può essere risolto in tempo polinomiale \underbar{SOLO} se i task sono preentable.
 L'idea alla base dell'approccio è quella di trasformare  il set di task dipendenti $\mathcal{T}$ in un insieme di task indipendenti $\mathcal{T}^*$ tramite adeguate modifiche ai parametri temporali, dopodiché possiamo applicare l'algoritmo EDF.
-L'algoritmo di trasformazione garantisce che $\mathcal{T}$ sia schedulabile se e solo se $\mathcal{T}*$ è schedulabile. In pratica tutti i release time e le deadline sono modificati in modo che ogni task non possa cominciare prima del predecessore e non possa fare preemption su i suoi successori.
+L'algoritmo di trasformazione garantisce che $\mathcal{T}$ sia schedulabile se e solo se $\mathcal{T}^*$ è schedulabile. In pratica tutti i release time e le deadline sono modificati in modo che ogni task non possa cominciare prima del predecessore e non possa fare preemption su i suoi successori.
 
 \chapter{Scheduling di task periodici}
 In molti sistemi real-time di controllo, le attività periodiche compongono la maggior parte della computazione del sistema.
@@ -497,7 +497,7 @@ $25ms$, che è il massimo comune divisore dei periodi. Quindi il task $A$ viene 
 In generale, il major cycle è uguale al minimo comune multiplo di tutti i periodi. Per poter garantire a priori che lo schedule sia feasible su un processore,
 è sufficiente sapere il WCET dei task e verificare che la somma all'interno di ogni slot sia minore o uguale al minor cycle.
 \\
-Il \textbf{vantaggio} principale di timeline scheduling è la sua \textbf{semplicità}. Può essere implementato tra programmando un timer che interrompa con periodo uguale al minor cycle
+Il \textbf{vantaggio} principale di timeline scheduling è la sua \textbf{semplicità}. Può essere implementato programmando un timer che interrompa con periodo uguale al minor cycle
 e scrivendo un ciclo main dove i task vengono chiamati nell'ordine dato dal major cycle, inserendo punti di sincronizzazione a ogni inizio del minor cycle.
 Dato che la sequenza di attivazione dei task non è determinata da un algoritmo di scheduling nel kernel, ma è determinata dalle chiamate effettuate dal main, non vi sono context switch, dunque l'overhead a runtime è molto basso.
 Nonostante questi vantaggi, vi sono dei problemi, ad esempio l'alta fragilità in situazioni di overload. Se un task non termina nel limite del minor cycle, può essere continuato o abortito.
@@ -548,7 +548,7 @@ Liu e Layland hanno inoltre derivato che $U_{lub}$ per RM su un task set di $n$ 
 Il bound diminuisce all'aumentare di $n$. Per valori alti $U_{lub}$ converge a $U_{lub} = \ln 2 \approx 0.69$. 
 \subsubsection{Bound iperbolico per RM}
 L'analisi di fattibilità su RM può anche essere effettuata utilizzando un bound iperbolico.
-Il test ha la stessa complessità computazionale di quello di Liu e Layland, ma è meno pessimistico, dato che accetta task se4t che verrebbero rifiutati dal test LL.
+Il test ha la stessa complessità computazionale di quello di Liu e Layland, ma è meno pessimistico, dato che accetta task set che verrebbero rifiutati dal test LL.
 Il seguente teorema offre una condizione sufficiente per testare la schedulabilità di un task set con RM.
 \begin{theorem}
     
