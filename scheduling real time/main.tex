@@ -79,7 +79,7 @@ Le caratteristiche principali sono:
     Supporto per la programmazione concorrente offerta attraverso un insieme di chiamate a sistema per la gestione dei processi. Molte di queste primitive
     non prendono in considerazione il tempo e, peggio ancora, introducono ritardi senza limiti ai tempi di esecuzione, il che potrebbe portare le task hard a non rispettare le deadline in maniera non predicibile.
 \item \textbf{Scheduling basato su priorità}\\
-    Meccanismo flessibile di scheduling, dato che permette di implementare diverse strategie in base alla maniera in cui assegno le priori
+    Meccanismo flessibile di scheduling, dato che permette di implementare diverse strategie in base alla maniera in cui assegno le priorità.
     Nonostante ciò, mappare i constraint a un insieme di priorità è difficile e non sempre possibile, specialmente in un sistema dinamico.
     Il problema principale è che i kernel permettono un \textbf{numero limitato di livelli di priorità}, mentre le deadline possono variare molto di più.
     In sistemi dinamici l'arrivo di una nuova task può comportare un remappaggio dell'intero insieme di priorità.
@@ -107,7 +107,7 @@ Alcune proprietà importanti sono:
 \begin{itemize}
 \item \textbf{Timeliness}\\
     I risultati non devono essere corretti solo nel loro valore ma anche nel dominio temporale.
-    Di conseguenza il sistema operativa deve fornire degli specifici meccanismi del kernel per la gestione del tempo e 
+    Di conseguenza il sistema operativo deve fornire degli specifici meccanismi del kernel per la gestione del tempo e 
     per la gestione dei task con constraint temporali espliciti e criticità diverse.
 \item \textbf{Predicibilità}\\\
     Per raggiungere il livello di performance desiderato, il sistema deve essere analizzabile per prevedere le conseguenze di ogni decisione di scheduling.
@@ -477,7 +477,7 @@ Per un algoritmo di scheduling $A$, il limite superiore minore $U_{lub}(\Gamma,A
 Dato che $U_{lub}(\Gamma,A)$ è il minimo di tutti gli upper bound, qualsiasi task set con fattore di utilizzo minore di $U_{lub}(\Gamma,A)$ è \underline{sicuramente} schedulabile da $A$. In questa maniera 
 è facilmente determinabile se un task set è schedulabile o meno con un determinato algoritmo. 
 \begin{itemize}
-    \item Se $ U_{lub}< U < 1.0$, la schedulabilità viene raggiunta solo se i periodi sono compatibili.
+    \item Se $ U_{lub}< U \leq 1.0$, la schedulabilità viene raggiunta solo se i periodi sono compatibili.
     \item Se $U_{lub} > 1.0 $, il task set \underline{non è schedulabile da nessun algoritmo}.
 \end{itemize}
 \section{Timeline scheduling}
@@ -492,7 +492,7 @@ $25ms$, che è il massimo comune divisore dei periodi. Quindi il task $A$ viene 
     \includegraphics[width=\textwidth]{pictures/timelineScheduling.png}
     \caption{Esempio di timeline scheduling}
 \end{figure}
-\noindent La durata dello slot è detta \textit{Minor cycle}, mentre l'intervallo minio di tempo dopo il quale uno schedule si ripete è detto \textit{Major cycle}.
+\noindent La durata dello slot è detta \textit{Minor cycle}, mentre l'intervallo minimo di tempo dopo il quale uno schedule si ripete è detto \textit{Major cycle}.
 \\
 In generale, il major cycle è uguale al minimo comune multiplo di tutti i periodi. Per poter garantire a priori che lo schedule sia feasible su un processore,
 è sufficiente sapere il WCET dei task e verificare che la somma all'interno di ogni slot sia minore o uguale al minor cycle.
